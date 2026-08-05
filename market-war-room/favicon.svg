@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" role="img" aria-label="Market War Room">
+  <rect width="64" height="64" rx="14" fill="#0a0b0d"/>
+  <path d="M14 43h36" stroke="#252a31" stroke-width="4" stroke-linecap="round"/>
+  <path d="M17 38l9-10 8 6 13-16" fill="none" stroke="#48d597" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"/>
+  <path d="M18 18h28" stroke="#f06c78" stroke-width="4" stroke-linecap="round" opacity=".85"/>
+</svg>

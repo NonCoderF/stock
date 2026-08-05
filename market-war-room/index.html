@@ -1,0 +1,158 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>MARKET WAR ROOM</title>
+    <meta name="description" content="AI Bull vs Bear Speculation">
+    <link rel="icon" href="favicon.svg" type="image/svg+xml">
+    <link rel="stylesheet" href="styles.css">
+    <script src="config.js"></script>
+    <script type="module" src="js/main.js"></script>
+  </head>
+  <body>
+    <a class="skip-link" href="#main">Skip to market observation</a>
+    <header class="site-header">
+      <div>
+        <p class="eyebrow">AI Bull vs Bear Speculation</p>
+        <h1>MARKET WAR ROOM</h1>
+        <p class="statement">Watch every battlefield.<br>Bid only when the evidence aligns.</p>
+        <p class="supporting-copy">
+          Each timeframe is a separate arena. Commander AI compares the immediate battle,
+          higher-timeframe reinforcement, and wider market context before issuing one
+          spectator decision.
+        </p>
+      </div>
+      <div class="feed-status" aria-live="polite">
+        <span class="status-dot" aria-hidden="true"></span>
+        <span id="feedStatusText">Feed ready</span>
+      </div>
+    </header>
+
+    <main id="main" aria-busy="false">
+      <section class="input-shell" aria-labelledby="observeTitle">
+        <div>
+          <h2 id="observeTitle">Observe market battle</h2>
+          <p>Deterministic bull-vs-bear signal with AI explanation. No automatic order execution.</p>
+        </div>
+        <form id="analysisForm" novalidate>
+          <div class="field symbol-field">
+            <label for="symbol">Symbol</label>
+            <input id="symbol" name="symbol" type="text" value="RELIANCE" maxlength="30" autocomplete="off" spellcheck="false" required>
+            <p class="field-error" id="symbolError"></p>
+          </div>
+          <div class="field">
+            <label for="exchange">Exchange</label>
+            <select id="exchange" name="exchange">
+              <option>NSE</option>
+              <option>BSE</option>
+              <option>NASDAQ</option>
+              <option>NYSE</option>
+              <option>YAHOO</option>
+            </select>
+            <p class="field-error" id="exchangeError"></p>
+          </div>
+          <div class="field capital-field">
+            <label for="capital">Capital</label>
+            <div class="money-input">
+              <span id="currencySymbol" aria-hidden="true">&#8377;</span>
+              <input id="capital" name="capital" type="number" value="10000" min="1000" max="1000000" step="1" inputmode="numeric" required>
+            </div>
+            <p class="field-error" id="capitalError"></p>
+          </div>
+          <div class="field">
+            <label for="riskProfile">Risk profile</label>
+            <select id="riskProfile" name="riskProfile">
+              <option value="CONSERVATIVE">Conservative</option>
+              <option value="CONTROLLED" selected>Controlled</option>
+              <option value="AGGRESSIVE">Aggressive</option>
+            </select>
+            <p class="risk-copy" id="riskCopy">Balanced allocation and risk limits.</p>
+            <p class="field-error" id="riskProfileError"></p>
+          </div>
+          <div class="field">
+            <label for="holdingPeriod">Maximum holding period</label>
+            <select id="holdingPeriod" name="holdingPeriod">
+              <option value="5_MINUTES">5 minutes</option>
+              <option value="15_MINUTES">15 minutes</option>
+              <option value="30_MINUTES" selected>30 minutes</option>
+              <option value="1_HOUR">1 hour</option>
+              <option value="4_HOURS">4 hours</option>
+              <option value="MARKET_CLOSE">Market close</option>
+              <option value="1_DAY">1 day</option>
+              <option value="3_DAYS">3 days</option>
+              <option value="1_WEEK">1 week</option>
+              <option value="1_MONTH">1 month</option>
+            </select>
+            <p class="field-error" id="holdingPeriodError"></p>
+          </div>
+          <div class="field">
+            <label for="pollInterval">Loop delay</label>
+            <select id="pollInterval" name="pollInterval" aria-label="Live loop delay after each response">
+              <option value="0" selected>Instant</option>
+              <option value="1000">1 sec</option>
+              <option value="3000">3 sec</option>
+              <option value="5000">5 sec</option>
+              <option value="7000">7 sec</option>
+              <option value="9000">9 sec</option>
+              <option value="11000">11 sec</option>
+            </select>
+            <p class="field-error" id="pollIntervalError"></p>
+          </div>
+          <div class="actions">
+            <button id="runButton" type="submit">OBSERVE THE BATTLE</button>
+            <button id="cancelButton" class="secondary" type="button" hidden>Cancel</button>
+          </div>
+        </form>
+      </section>
+
+      <section id="loadingPanel" class="loading-panel" aria-live="polite" hidden>
+        <span class="loader" aria-hidden="true"></span>
+        <span id="loadingText">Opening the arenas</span>
+      </section>
+
+      <section id="errorPanel" class="error-panel" hidden></section>
+
+      <section id="emptyState" class="empty-state">
+        <h2>Choose an instrument and observe the battle.</h2>
+        <p>Commander AI will compare the entry, confirmation, and context arenas before issuing one spectator call.</p>
+      </section>
+
+      <section id="resultShell" class="result-shell" hidden>
+        <div id="marketFacts" class="facts-row"></div>
+        <section id="commanderHero" class="commander-hero" aria-live="polite"></section>
+        <section id="battleCard" class="battlefield-status"></section>
+        <section id="chartSection" class="panel chart-panel"></section>
+        <section id="strategyCommandCenter" class="panel strategy-command-center" aria-labelledby="strategy-command-center-title" hidden></section>
+        <section id="arenasSection" class="panel arenas-panel"></section>
+        <article id="commanderCard" class="panel commander-panel" aria-live="polite"></article>
+        <div class="plan-grid">
+          <section id="capitalPlan" class="panel"></section>
+          <section id="timingPlan" class="panel"></section>
+        </div>
+        <div class="reason-grid">
+          <section id="reasoningSection" class="panel"></section>
+          <section id="sessionStatus" class="panel"></section>
+        </div>
+        <section id="timelineSection" class="panel timeline-panel"></section>
+        <section id="newsSection" class="panel"></section>
+        <section id="failedArenas" class="panel warning-panel" hidden></section>
+      </section>
+
+      <section class="safety-statement">
+        Market calculations and the bull-vs-bear signal are performed locally in the browser.
+        AI explanations and strategies cannot override the local market signal. Success
+        estimates are uncalibrated model assessments, not historical probabilities or
+        guarantees. No order is placed by this application.
+      </section>
+    </main>
+
+    <footer id="telemetry" class="telemetry">
+      <span>Market &#8212;</span>
+      <span>AI &#8212;</span>
+      <span>Total &#8212;</span>
+      <span>Model &#8212;</span>
+      <span>Stored &#8212;</span>
+    </footer>
+  </body>
+</html>

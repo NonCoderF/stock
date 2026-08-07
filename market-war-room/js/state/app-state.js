@@ -8,6 +8,8 @@ export const state = {
   strategy: {
     status: "IDLE",
     strategies: [],
+    selectedSimulationStrategy: null,
+    paperTrading: null,
     metadata: null,
     error: null
   },
@@ -15,6 +17,13 @@ export const state = {
     previous: null,
     current: null,
     changedAt: null
+  },
+  runningMan: {
+    runId: null,
+    observationNo: 0,
+    active: false,
+    lastPersistence: null,
+    startedAt: null
   },
   lastEvidence: null,
   response: null,
@@ -43,9 +52,16 @@ export function resetForRequest(request, controller) {
 export function appendObservation(summary) {
   state.observations.push({
     time: new Date().toISOString(),
+    observedAt: summary.observedAt || new Date().toISOString(),
     action: summary.action,
     summary: summary.summary || "Observation completed.",
-    signal: summary.signal || null
+    signal: summary.signal || null,
+    runId: summary.runId || null,
+    observationNo: summary.observationNo ?? null,
+    persisted: summary.persisted === true,
+    persistedAt: summary.persistedAt || null,
+    bullStrength: summary.bullStrength ?? summary.signal?.bullStrength ?? null,
+    bearStrength: summary.bearStrength ?? summary.signal?.bearStrength ?? null
   });
   if (state.observations.length > 30) state.observations = state.observations.slice(-30);
 }

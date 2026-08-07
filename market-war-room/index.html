@@ -105,6 +105,54 @@
             <button id="cancelButton" class="secondary" type="button" hidden>Cancel</button>
           </div>
         </form>
+
+        <div class="running-man-panel" aria-labelledby="running-man-title">
+          <div class="running-man-panel__header">
+            <div>
+              <p class="eyebrow">Running Man</p>
+              <h2 id="running-man-title">Observation History</h2>
+              <p>Every observation becomes a timestamped snapshot of the battlefield.</p>
+            </div>
+
+            <button
+              id="new-running-man-run"
+              type="button"
+              class="secondary-button"
+            >
+              New Run
+            </button>
+          </div>
+
+          <div
+            id="running-man-status"
+            class="running-man-status"
+            aria-live="polite"
+          >
+            <div>
+              <span>Run</span>
+              <strong id="running-man-run">—</strong>
+            </div>
+
+            <div>
+              <span>Observation</span>
+              <strong id="running-man-observation">—</strong>
+            </div>
+
+            <div>
+              <span>Persistence</span>
+              <strong id="running-man-persistence">—</strong>
+            </div>
+
+            <div>
+              <span>Saved</span>
+              <strong id="running-man-saved-at">—</strong>
+            </div>
+          </div>
+
+          <p id="running-man-warning" class="running-man-warning" hidden>
+            History save failed. Analysis remains available.
+          </p>
+        </div>
       </section>
 
       <section id="loadingPanel" class="loading-panel" aria-live="polite" hidden>
@@ -125,6 +173,32 @@
         <section id="battleCard" class="battlefield-status"></section>
         <section id="chartSection" class="panel chart-panel"></section>
         <section id="strategyCommandCenter" class="panel strategy-command-center" aria-labelledby="strategy-command-center-title" hidden></section>
+        <section
+          id="paper-trading-card"
+          class="paper-trading-card"
+          aria-labelledby="paper-trading-title"
+          hidden
+        >
+          <header class="paper-trading-card__header">
+            <div>
+              <p class="eyebrow">Paper Trading</p>
+              <h2 id="paper-trading-title">Paper Trade Simulation</h2>
+              <p id="paper-trading-subtitle" class="paper-trading-card__subtitle">
+                Simulated entry, risk, target, and projected P&amp;L.
+              </p>
+            </div>
+
+            <div id="paper-trading-status" class="paper-trading-status" aria-live="polite">
+              Idle
+            </div>
+          </header>
+
+          <div id="paper-trading-strategy" class="paper-trading-strategy"></div>
+          <div id="paper-trading-metrics" class="paper-trading-metrics"></div>
+          <div id="paper-trading-plan" class="paper-trading-plan"></div>
+          <div id="paper-trading-conditions" class="paper-trading-conditions"></div>
+          <p id="paper-trading-disclaimer" class="paper-trading-disclaimer"></p>
+        </section>
         <section id="arenasSection" class="panel arenas-panel"></section>
         <article id="commanderCard" class="panel commander-panel" aria-live="polite"></article>
         <div class="plan-grid">

@@ -280,6 +280,12 @@ button.secondary {
   color: var(--text);
 }
 
+.secondary-button {
+  border-color: var(--border-hot);
+  background: #090d13;
+  color: var(--text);
+}
+
 .loading-panel,
 .error-panel,
 .empty-state,
@@ -1948,6 +1954,246 @@ summary {
   margin-bottom: 0;
 }
 
+.running-man-panel {
+  border-top: 1px solid var(--border);
+  margin-top: 10px;
+  padding-top: 10px;
+}
+
+.running-man-panel__header {
+  display: flex;
+  justify-content: space-between;
+  gap: 1rem;
+  align-items: flex-start;
+}
+
+.running-man-panel__header p:not(.eyebrow),
+.running-man-warning {
+  color: var(--text-muted);
+}
+
+.running-man-status {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: .65rem;
+  margin-top: .75rem;
+}
+
+.running-man-status > div {
+  border: 1px solid var(--border);
+  background: var(--surface-elevated);
+  padding: .65rem .75rem;
+}
+
+.running-man-status span {
+  display: block;
+  color: var(--text-muted);
+  font-size: .7rem;
+  text-transform: uppercase;
+  letter-spacing: 0;
+}
+
+.running-man-status strong {
+  display: block;
+  margin-top: .25rem;
+}
+
+#running-man-persistence[data-tone="saved"] {
+  color: var(--bull);
+}
+
+#running-man-persistence[data-tone="error"] {
+  color: var(--bear);
+}
+
+#running-man-persistence[data-tone="skipped"] {
+  color: var(--balanced);
+}
+
+.running-man-warning {
+  border-top: 1px solid var(--border);
+  margin: .7rem 0 0;
+  padding-top: .6rem;
+}
+
+.paper-trading-card {
+  grid-column: 1 / -1;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--surface);
+  padding: 1rem;
+  margin-top: 1rem;
+}
+
+.paper-trading-card[data-status="ready"] {
+  border-color: var(--bull);
+}
+
+.paper-trading-card[data-status="waiting"] {
+  border-color: var(--balanced);
+}
+
+.paper-trading-card[data-status="blocked"] {
+  border-color: var(--bear);
+}
+
+.paper-trading-card__header,
+.paper-trading-strategy__summary,
+.paper-trading-account,
+.paper-trading-safety {
+  display: flex;
+  justify-content: space-between;
+  gap: 1rem;
+  align-items: flex-start;
+}
+
+.paper-trading-card__subtitle,
+.paper-trading-strategy__description {
+  color: var(--text-muted);
+}
+
+.paper-trading-status,
+.paper-trading-status-badge,
+.paper-trading-strategy__label,
+.paper-trading-account,
+.paper-trading-safety,
+.paper-trading-price-grid span,
+.paper-trading-metric span {
+  font-family: var(--mono);
+  font-size: .62rem;
+  text-transform: uppercase;
+}
+
+.paper-trading-status,
+.paper-trading-status-badge {
+  border: 1px solid currentColor;
+  padding: 4px 7px;
+  white-space: nowrap;
+}
+
+.paper-trading-status-badge--ready {
+  color: var(--bull);
+}
+
+.paper-trading-status-badge--waiting {
+  color: var(--balanced);
+}
+
+.paper-trading-status-badge--blocked {
+  color: var(--bear);
+}
+
+.paper-trading-strategy {
+  border-top: 1px solid var(--border);
+  margin-top: .8rem;
+  padding-top: .8rem;
+}
+
+.paper-trading-strategy__label,
+.paper-trading-account,
+.paper-trading-safety,
+.paper-trading-metric span,
+.paper-trading-price-grid span {
+  color: var(--text-muted);
+}
+
+.paper-trading-strategy__title {
+  display: block;
+  margin-top: .25rem;
+  color: var(--text);
+  font-size: 1rem;
+}
+
+.paper-trading-safety,
+.paper-trading-account {
+  flex-wrap: wrap;
+  justify-content: flex-start;
+  gap: .4rem;
+  margin-top: .5rem;
+}
+
+.paper-trading-safety span,
+.paper-trading-account span {
+  border: 1px solid var(--border);
+  background: #050607;
+  padding: 3px 6px;
+}
+
+.paper-trading-safety span {
+  color: var(--balanced);
+}
+
+.paper-trading-metrics {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: .75rem;
+  margin-top: 1rem;
+}
+
+.paper-trading-metric {
+  border: 1px solid var(--border);
+  padding: .75rem;
+  background: var(--surface-elevated);
+}
+
+.paper-trading-metric span {
+  display: block;
+}
+
+.paper-trading-metric strong {
+  display: block;
+  margin-top: .35rem;
+  font-size: 1.05rem;
+}
+
+.paper-trading-metric--profit strong {
+  color: var(--bull);
+}
+
+.paper-trading-metric--loss strong {
+  color: var(--bear);
+}
+
+.paper-trading-price-plan {
+  margin-top: 1rem;
+}
+
+.paper-trading-price-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: .75rem;
+}
+
+.paper-trading-price-grid > div {
+  border: 1px solid var(--border);
+  padding: .75rem;
+}
+
+.paper-trading-price-grid strong {
+  display: block;
+  margin-top: .35rem;
+}
+
+.paper-trading-entry-condition,
+.paper-trading-exit-conditions,
+.paper-trading-rejections {
+  border-top: 1px solid var(--border);
+  margin-top: 1rem;
+  padding-top: 1rem;
+}
+
+.paper-trading-conditions ul {
+  margin: .4rem 0 0;
+  padding-left: 16px;
+  color: var(--text-muted);
+}
+
+.paper-trading-disclaimer {
+  margin-top: 1rem;
+  color: var(--text-muted);
+  font-size: .8rem;
+}
+
 .timeline-event {
   display: block;
   border: 1px solid var(--border);
@@ -2031,9 +2277,14 @@ summary {
   .plan-grid,
   .reason-grid,
   .timeline-panel,
+  .paper-trading-card,
   #newsSection,
   #failedArenas {
     grid-column: 1 / -1;
+  }
+
+  .paper-trading-metrics {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 }
 
@@ -2062,5 +2313,33 @@ summary {
 
   .chart-panel {
     grid-column: 1 / -1;
+  }
+
+  .paper-trading-card__header,
+  .paper-trading-strategy__summary {
+    display: block;
+  }
+
+  .paper-trading-status,
+  .paper-trading-status-badge {
+    display: inline-block;
+    margin-top: 6px;
+  }
+
+  .paper-trading-metrics,
+  .paper-trading-price-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .running-man-panel__header {
+    display: block;
+  }
+
+  .running-man-panel__header button {
+    margin-top: 6px;
+  }
+
+  .running-man-status {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 }

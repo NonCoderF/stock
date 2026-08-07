@@ -125,7 +125,95 @@ The endpoint returns exactly three strategies:
 
 Each card displays category, title, action, confidence, risk level, holding time, entry, stop loss, target, reasons, and summary.
 
+Each strategy may also include:
+
+```js
+strategy.simulationProposal
+strategy.simulationPlan
+```
+
+`simulationPlan` is the server-deterministic read-only paper-trade plan for that strategy. It can include eligibility, status, available capital, applied allocation percentage, allocation amount, entry price, stop-loss price, target price, quantity, invested amount, cash reserve, risk per share, projected net loss at stop, projected net profit at target, reward-to-risk values, maximum holding minutes, entry condition, exit conditions, rejection reasons, and disclaimer.
+
+The response may also include:
+
+```js
+payload.data.paperTrading
+```
+
+`paperTrading` describes the paper-only account context, including enabled state, mode, initial capital, currency, equity, P&L placeholders, execution authority, entry price policy, exit priority, and safety disclaimer.
+
 The frontend no longer expects `data.strategyCandidates`, `data.strategyBook`, or `data.decision.strategyBook`.
+
+## Paper Trade Simulation Card
+
+Below the three Commander mission cards, the frontend renders one additional `PAPER TRADE SIMULATION` card when both `data.paperTrading` and a selected strategy `simulationPlan` are available.
+
+The strategy selection rule is:
+
+1. Prefer the first strategy whose `simulationPlan.eligible === true`.
+2. Fall back to the `BEST_OPPORTUNITY` strategy.
+3. Fall back to the first strategy.
+
+The selected plan is reconciled locally with the deterministic bull-vs-bear signal before display. If the local signal is `SELL` or `STRONG_SELL`, the card never displays `READY FOR PAPER ENTRY`; the plan is marked `NO_SIMULATED_ENTRY` with a rejection reason from the browser. If the local signal is `WAIT` and the server says ready, the card displays `WAITING FOR TRIGGER`.
+
+The card displays the paper account state, selected strategy, readiness status, capital and allocation, quantity, entry/stop/target price plan, risk per share, gross and net reward-to-risk, maximum holding time, projected net loss at stop, projected net profit at target, projected return percentage, entry condition, exit conditions, rejection reasons, and disclaimer.
+
+Projected P&L is labeled as projected only. The card always shows:
+
+```text
+SIMULATION ONLY
+NO REAL ORDER PLACED
+PROJECTED P&L IS NOT GUARANTEED
+```
+
+This phase is a read-only preview. It does not open a simulated position, deduct wallet cash, update unrealized P&L, auto-close at stop or target, or persist trade history. Those behaviors belong to a future live paper-position phase.
+
+## Running Man Persistence
+
+Running Man stores a timestamped sequence of observations so the system can later replay how market evidence, AI strategies, and paper-trade plans evolved.
+
+The browser creates one stable `runId` for an active observation session and sends a zero-based `observationNo` with each `analyze-market` request:
+
+```json
+{
+  "mission": {},
+  "quote": {},
+  "arenas": [],
+  "relevantNews": [],
+  "runId": "a1b2c3d4-...",
+  "observationNo": 0
+}
+```
+
+The first observation in a run is `0`, then `1`, `2`, `3`, and so on. A live polling loop keeps the same `runId`; it does not create a new UUID for every poll. The `New Run` control starts a fresh run without automatically triggering market analysis.
+
+The backend may return:
+
+```js
+payload.data.persistence
+```
+
+with informational fields such as `enabled`, `status`, `table`, `runId`, `observationNo`, `rowId`, `persistedAt`, and `error`. Supported statuses are `SAVED`, `SKIPPED`, and `ERROR`.
+
+Persistence is a separate error domain. A persistence failure is logged and shown as a compact non-blocking warning:
+
+```text
+History save failed. Analysis remains available.
+```
+
+It does not replace market errors, does not count as a strategy error, does not hide strategies, does not block paper-trade rendering, and never changes the local bull-vs-bear authority.
+
+Running Man client state is stored in SessionStorage under:
+
+```text
+market-war-room:running-man
+```
+
+The stored client state includes `runId`, the next `observationNo`, whether the run is active, the last persistence summary, and the started timestamp. A new browser session may create a new run.
+
+The local observation timeline stores compact persistence metadata only: observed time, shortened run ID, observation number, saved state, persisted timestamp, signal, bull strength, and bear strength. It does not store the full backend persistence response for every timeline item.
+
+The existing `data.strategies` and `data.paperTrading` nodes remain backward compatible. Future phases can build replay dashboards or richer forward-observation history from the persisted Running Man rows.
 
 ## Commander Mapping
 

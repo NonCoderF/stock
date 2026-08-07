@@ -12,6 +12,7 @@ export function renderTimeline(root, observations) {
 
 function renderEvent(item) {
   const signal = item.signal;
+  const persistenceLine = renderPersistenceLine(item);
 
   if (!signal) {
     return `
@@ -19,6 +20,7 @@ function renderEvent(item) {
         <span class="timeline-time">${escape(new Date(item.time).toLocaleTimeString())}</span>
         <strong>${escape(display(item.action))}</strong>
         <p>${escape(display(item.summary))}</p>
+        ${persistenceLine}
       </li>
     `;
   }
@@ -31,8 +33,29 @@ function renderEvent(item) {
       <p>BEARS: ${escape(display(signal.bearStrength))}</p>
       <p>DIFFERENCE: ${escape(display(signal.difference))}</p>
       <p>LONG ACTION: ${escape(formatLongAction(signal.longAction))}</p>
+      ${persistenceLine}
     </li>
   `;
+}
+
+function renderPersistenceLine(item) {
+  if (!item.runId && item.observationNo == null) {
+    return "";
+  }
+
+  const persisted = item.persisted ? "SAVED" : "NOT PERSISTED";
+  const savedAt = item.persistedAt
+    ? ` @ ${new Date(item.persistedAt).toLocaleTimeString()}`
+    : "";
+
+  return `
+    <p>RUN ${escape(shortRunId(item.runId))} / OBS ${escape(display(item.observationNo))} / ${escape(persisted + savedAt)}</p>
+  `;
+}
+
+function shortRunId(runId) {
+  if (!runId) return "—";
+  return String(runId).slice(0, 8);
 }
 
 function formatLongAction(value) {

@@ -15,11 +15,23 @@ import { buildCapitalPlan } from "./engine/risk-policy.js";
 import { state, appendObservation, resetForRequest } from "./state/app-state.js";
 import { evidenceFingerprint, getCache, setCache } from "./state/cache.js";
 import { scheduleLoop, stopLoop } from "./state/live-observer.js";
+import {
+  nextRunningManObservation,
+  persistRunningManClientState,
+  renderRunningManStatus,
+  restoreRunningManClientState,
+  startRunningManSession
+} from "./state/running-man.js";
 import { renderArenas, renderBattle } from "./ui/arenas.js";
 import { renderChart } from "./ui/chart.js";
 import { renderCommander } from "./ui/commander.js";
 import { clearError, renderError } from "./ui/errors.js";
 import { renderCapital, renderMarketView, renderTelemetry, renderTiming } from "./ui/market-view.js";
+import {
+  reconcileSimulationPlanWithSignal,
+  renderPaperTradingCard,
+  selectSimulationStrategy
+} from "./ui/paper-trading.js";
 import { renderStrategies, renderStrategyError, renderStrategyStatus } from "./ui/strategies.js";
 import { renderTimeline } from "./ui/timeline.js";
 
@@ -48,6 +60,8 @@ const root = {};
 document.addEventListener("DOMContentLoaded", () => {
   cacheElements();
   bindEvents();
+  restoreRunningManClientState();
+  renderRunningManStatus(state.runningMan.lastPersistence);
   restoreSession();
   updateCurrency();
 });
@@ -58,7 +72,8 @@ function cacheElements() {
     "currencySymbol", "runButton", "cancelButton", "loadingPanel", "loadingText", "errorPanel",
     "emptyState", "resultShell", "marketFacts", "commanderHero", "commanderCard", "battleCard",
     "arenasSection", "capitalPlan", "timingPlan", "chartSection", "reasoningSection", "sessionStatus",
-    "timelineSection", "newsSection", "failedArenas", "strategyCommandCenter", "telemetry", "feedStatusText"
+    "timelineSection", "newsSection", "failedArenas", "strategyCommandCenter", "telemetry", "feedStatusText",
+    "new-running-man-run"
   ].forEach((id) => {
     root[id] = document.getElementById(id);
   });
@@ -70,10 +85,15 @@ function bindEvents() {
     const request = buildRequest();
     if (!validateRequest(request)) return;
     stopLoop(state);
+    prepareRunningManForRequest(request);
     state.live = true;
     observe(request, { background: false });
   });
   root.cancelButton.addEventListener("click", () => stopObservation());
+  root["new-running-man-run"]?.addEventListener("click", () => {
+    startRunningManSession();
+    renderRunningManStatus(null);
+  });
   root.strategyCommandCenter.addEventListener("click", (event) => {
     if (event.target?.id === "retryCommanderButton") retryCommander();
   });
@@ -135,6 +155,8 @@ async function observe(request, options = {}) {
     state.strategy = {
       status: "LOADING",
       strategies: state.strategy?.strategies || [],
+      selectedSimulationStrategy: state.strategy?.selectedSimulationStrategy || null,
+      paperTrading: state.strategy?.paperTrading || null,
       metadata: state.strategy?.metadata || null,
       error: null
     };
@@ -146,13 +168,33 @@ async function observe(request, options = {}) {
     state.lastEvidence = evidence;
     const fingerprint = evidenceFingerprint(evidence, evidence.quote);
     const cached = getCache(`strategy:${fingerprint}`);
+    const runningManObservation = nextRunningManObservation();
+    const analyzePayload = buildAnalyzeMarketPayload({
+      request,
+      quote: evidence.quote,
+      evidence,
+      relevantNews: evidence.relevantNews,
+      runningMan: runningManObservation
+    });
+    let latestPersistence = null;
     if (cached && Array.isArray(cached.strategies) && cached.strategies.length === 3) {
       state.strategyStatus = "CACHED";
+      latestPersistence = {
+        runId: runningManObservation.runId,
+        observationNo: runningManObservation.observationNo,
+        status: "SKIPPED",
+        persistedAt: null
+      };
       const reconciled = reconcileStrategiesWithSignal(cached.strategies, marketSignal);
+      const paperContext = buildPaperTradingContext(reconciled, cached.paperTrading, cached.metadata, marketSignal);
       const changed = strategiesChanged(state.strategy?.strategies, reconciled);
+      state.runningMan.lastPersistence = latestPersistence;
+      persistRunningManClientState();
       state.strategy = {
         status: "SUCCESS",
         strategies: reconciled,
+        selectedSimulationStrategy: paperContext.selectedSimulationStrategy,
+        paperTrading: paperContext.paperTrading,
         metadata: cached.metadata,
         error: null
       };
@@ -162,6 +204,11 @@ async function observe(request, options = {}) {
       } else {
         updateStrategyEngineStatus("Cached");
       }
+      renderPaperTradingCard({
+        strategies: paperContext.renderStrategies,
+        paperTrading: paperContext.paperTrading
+      });
+      renderRunningManStatus(latestPersistence);
     } else {
       const strategyStarted = performance.now();
       state.strategy.status = "LOADING";
@@ -171,19 +218,27 @@ async function observe(request, options = {}) {
         renderStrategyStatus(root, "EAGLE VIEW READY. Commander AI is designing three missions...");
       }
       try {
-        const ai = await fetchHumanReadableStrategies(evidence, controller.signal);
+        const ai = await fetchHumanReadableStrategies(analyzePayload, controller.signal);
+        latestPersistence = ai.persistence || null;
+        handleRunningManPersistence(latestPersistence);
         const reconciled = reconcileStrategiesWithSignal(ai.strategies, marketSignal);
+        const paperContext = buildPaperTradingContext(reconciled, ai.paperTrading, ai.metadata, marketSignal);
         const changed = strategiesChanged(state.strategy?.strategies, reconciled);
         const strategyResult = {
           strategies: ai.strategies,
+          paperTrading: ai.paperTrading,
           metadata: ai.metadata,
           strategyMs: performance.now() - strategyStarted
         };
         setCache(`strategy:${fingerprint}`, strategyResult);
+        state.runningMan.lastPersistence = latestPersistence;
+        persistRunningManClientState();
         state.strategyStatus = "SUCCESS";
         state.strategy = {
           status: "SUCCESS",
           strategies: reconciled,
+          selectedSimulationStrategy: paperContext.selectedSimulationStrategy,
+          paperTrading: paperContext.paperTrading,
           metadata: ai.metadata,
           error: null
         };
@@ -193,12 +248,19 @@ async function observe(request, options = {}) {
         } else {
           updateStrategyEngineStatus("Ready");
         }
+        renderPaperTradingCard({
+          strategies: paperContext.renderStrategies,
+          paperTrading: paperContext.paperTrading
+        });
+        renderRunningManStatus(latestPersistence);
       } catch (strategyError) {
         if (strategyError.name === "AbortError") throw strategyError;
         state.strategyStatus = "ERROR";
         state.strategy = {
           status: "ERROR",
           strategies: state.strategy?.strategies || [],
+          selectedSimulationStrategy: state.strategy?.selectedSimulationStrategy || null,
+          paperTrading: state.strategy?.paperTrading || null,
           metadata: state.strategy?.metadata || null,
           error: strategyError
         };
@@ -211,9 +273,16 @@ async function observe(request, options = {}) {
     }
     state.status = "SUCCESS";
     appendObservation({
+      observedAt: new Date().toISOString(),
       action: state.signal.current?.signal || state.decision.action,
       summary: state.decision.summary,
-      signal: state.signal.current
+      signal: state.signal.current,
+      runId: latestPersistence?.runId || state.runningMan.runId,
+      observationNo: latestPersistence?.observationNo ?? runningManObservation.observationNo,
+      persisted: latestPersistence?.status === "SAVED",
+      persistedAt: latestPersistence?.persistedAt || null,
+      bullStrength: state.signal.current?.bullStrength ?? null,
+      bearStrength: state.signal.current?.bearStrength ?? null
     });
     renderPostStage(performance.now() - started);
     saveSession(request);
@@ -222,6 +291,8 @@ async function observe(request, options = {}) {
     if (error.name !== "AbortError") {
       state.status = "ERROR";
       state.live = false;
+      state.runningMan.active = false;
+      persistRunningManClientState();
       renderError(root, error);
       renderEngineStatus("Market Engine: failed", "Strategy Engine: stopped");
     }
@@ -239,6 +310,8 @@ async function retryCommander() {
   state.strategy = {
     status: "LOADING",
     strategies: state.strategy?.strategies || [],
+    selectedSimulationStrategy: state.strategy?.selectedSimulationStrategy || null,
+    paperTrading: state.strategy?.paperTrading || null,
     metadata: state.strategy?.metadata || null,
     error: null
   };
@@ -248,18 +321,33 @@ async function retryCommander() {
     renderStrategyStatus(root, "Commander AI is redesigning missions...");
   }
   try {
-    const ai = await fetchHumanReadableStrategies(state.lastEvidence, controller.signal);
+    const runningManObservation = nextRunningManObservation();
+    const analyzePayload = buildAnalyzeMarketPayload({
+      request: state.request,
+      quote: state.lastEvidence.quote,
+      evidence: state.lastEvidence,
+      relevantNews: state.lastEvidence.relevantNews,
+      runningMan: runningManObservation
+    });
+    const ai = await fetchHumanReadableStrategies(analyzePayload, controller.signal);
+    handleRunningManPersistence(ai.persistence || null);
     const reconciled = reconcileStrategiesWithSignal(ai.strategies, state.signal.current);
+    const paperContext = buildPaperTradingContext(reconciled, ai.paperTrading, ai.metadata, state.signal.current);
     const changed = strategiesChanged(state.strategy?.strategies, reconciled);
     state.strategyStatus = "SUCCESS";
     state.strategy = {
       status: "SUCCESS",
       strategies: reconciled,
+      selectedSimulationStrategy: paperContext.selectedSimulationStrategy,
+      paperTrading: paperContext.paperTrading,
       metadata: ai.metadata,
       error: null
     };
+    state.runningMan.lastPersistence = ai.persistence || null;
+    persistRunningManClientState();
     setCache(`strategy:${evidenceFingerprint(state.lastEvidence, state.lastEvidence.quote)}`, {
       strategies: ai.strategies,
+      paperTrading: ai.paperTrading,
       metadata: ai.metadata
     });
     if (changed || root.strategyCommandCenter.hidden) {
@@ -267,6 +355,11 @@ async function retryCommander() {
     } else {
       updateStrategyEngineStatus("Ready");
     }
+    renderPaperTradingCard({
+      strategies: paperContext.renderStrategies,
+      paperTrading: paperContext.paperTrading
+    });
+    renderRunningManStatus(ai.persistence || null);
     renderCommander(root, state.decision);
     renderPostStage(null);
   } catch (error) {
@@ -275,6 +368,8 @@ async function retryCommander() {
       state.strategy = {
         status: "ERROR",
         strategies: state.strategy?.strategies || [],
+        selectedSimulationStrategy: state.strategy?.selectedSimulationStrategy || null,
+        paperTrading: state.strategy?.paperTrading || null,
         metadata: state.strategy?.metadata || null,
         error
       };
@@ -325,6 +420,92 @@ function updateStrategyEngineStatus(label) {
 function strategiesChanged(previous, next) {
   if (!Array.isArray(previous) || !Array.isArray(next)) return true;
   return JSON.stringify(previous) !== JSON.stringify(next);
+}
+
+function prepareRunningManForRequest() {
+  if (!state.runningMan.active) {
+    startRunningManSession();
+    renderRunningManStatus(null);
+  }
+}
+
+function handleRunningManPersistence(persistence) {
+  console.debug("[RunningMan]", {
+    runId: persistence?.runId,
+    observationNo: persistence?.observationNo,
+    status: persistence?.status,
+    rowId: persistence?.rowId
+  });
+
+  if (persistence?.status === "ERROR") {
+    console.warn("Running Man persistence failed:", persistence.error);
+  }
+}
+
+export function buildAnalyzeMarketPayload({
+  request,
+  quote,
+  evidence,
+  relevantNews,
+  runningMan
+}) {
+  return {
+    mission: {
+      symbol: request.symbol,
+      exchange: request.exchange,
+      capital: request.capital,
+      riskProfile: request.riskProfile,
+      maximumHoldingMinutes: request.maximumHoldingMinutes
+    },
+
+    quote: {
+      price: quote?.price ?? null,
+      previousClose: quote?.previousClose ?? null,
+      dayHigh: quote?.dayHigh ?? null,
+      dayLow: quote?.dayLow ?? null,
+      changePercent: quote?.changePercent ?? null
+    },
+
+    arenas: buildCompactArenaPayload(evidence),
+
+    relevantNews: Array.isArray(relevantNews) ? relevantNews.slice(0, 5) : [],
+
+    runId: runningMan?.runId || null,
+
+    observationNo: Number.isInteger(runningMan?.observationNo)
+      ? runningMan.observationNo
+      : 0
+  };
+}
+
+export function buildCompactArenaPayload(evidence) {
+  return Array.isArray(evidence?.arenas) ? evidence.arenas : [];
+}
+
+function buildPaperTradingContext(strategies, paperTrading, metadata, marketSignal) {
+  const selectedStrategy = selectSimulationStrategy(strategies);
+  const reconciledPlan = reconcileSimulationPlanWithSignal(
+    selectedStrategy?.simulationPlan,
+    marketSignal
+  );
+  const reconciledStrategy = selectedStrategy
+    ? {
+        ...selectedStrategy,
+        simulationPlan: reconciledPlan
+      }
+    : null;
+
+  return {
+    selectedSimulationStrategy: reconciledStrategy,
+    paperTrading: paperTrading || null,
+    metadata: metadata || null,
+    renderStrategies: reconciledStrategy
+      ? [
+          reconciledStrategy,
+          ...strategies.filter((strategy) => strategy.id !== reconciledStrategy.id)
+        ]
+      : strategies
+  };
 }
 
 function buildDecision(marketSignal, campaign, capitalPlan, request) {
@@ -530,8 +711,11 @@ function stopFetchClock() {
 function stopObservation() {
   stopLoop(state);
   state.status = state.marketStatus === "SUCCESS" ? "SUCCESS" : "IDLE";
+  state.runningMan.active = false;
+  persistRunningManClientState();
   setLoading(false);
   renderEngineStatus(`Market Engine: ${state.marketStatus}`, `Strategy Engine: ${state.strategyStatus}`);
+  renderRunningManStatus(state.runningMan.lastPersistence);
 }
 
 function buildRequest() {
@@ -575,6 +759,8 @@ function saveSession(request) {
     if (state.strategy?.strategies?.length) {
       sessionStorage.setItem(STORAGE_STRATEGIES, JSON.stringify({
         strategies: state.strategy.strategies,
+        selectedSimulationStrategy: state.strategy.selectedSimulationStrategy,
+        paperTrading: state.strategy.paperTrading,
         metadata: state.strategy.metadata,
         savedAt: new Date().toISOString()
       }));
@@ -607,6 +793,8 @@ function restoreSession() {
       state.strategy = {
         status: savedStrategies?.strategies?.length ? "SUCCESS" : "IDLE",
         strategies: savedStrategies?.strategies || [],
+        selectedSimulationStrategy: savedStrategies?.selectedSimulationStrategy || null,
+        paperTrading: savedStrategies?.paperTrading || null,
         metadata: savedStrategies?.metadata || null,
         error: null
       };
@@ -614,7 +802,19 @@ function restoreSession() {
       state.strategyStatus = savedStrategies?.strategies?.length ? "RESTORED" : "IDLE";
       renderMarketStage({ request: saved.request, market: saved.market, decision: saved.decision, marketMs: null, totalMs: null });
       if (savedStrategies?.strategies?.length) {
+        const paperContext = buildPaperTradingContext(
+          savedStrategies.strategies,
+          savedStrategies.paperTrading,
+          savedStrategies.metadata,
+          state.signal.current
+        );
+        state.strategy.selectedSimulationStrategy = paperContext.selectedSimulationStrategy;
+        state.strategy.paperTrading = paperContext.paperTrading;
         renderStrategies(root, savedStrategies.strategies, savedStrategies.metadata);
+        renderPaperTradingCard({
+          strategies: paperContext.renderStrategies,
+          paperTrading: paperContext.paperTrading
+        });
       }
       renderPostStage(null);
     }

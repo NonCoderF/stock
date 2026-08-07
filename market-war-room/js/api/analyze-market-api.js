@@ -35,7 +35,9 @@ export async function fetchHumanReadableStrategies(payload, signal) {
   }
 
   return {
-    strategies,
+    strategies: result?.data?.strategies || [],
+    paperTrading: result?.data?.paperTrading || null,
+    persistence: result?.data?.persistence || null,
     metadata: result?.metadata || {}
   };
 }

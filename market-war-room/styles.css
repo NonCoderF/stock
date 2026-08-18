@@ -739,6 +739,12 @@ blockquote span,
   color: var(--text);
 }
 
+.arena-key-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 5px;
+}
+
 details {
   margin-top: 12px;
   border-top: 1px solid var(--border);
@@ -1082,29 +1088,6 @@ summary {
 
   .chart-wrap {
     min-height: 260px;
-  }
-}
-
-@media (max-width: 1000px) {
-  .strategy-missions {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-  }
-}
-
-@media (max-width: 700px) {
-  .strategy-command-center .section-header,
-  .strategy-mission__header {
-    display: block;
-  }
-
-  .strategy-action {
-    display: inline-block;
-    margin-top: 6px;
-  }
-
-  .strategy-missions,
-  .strategy-mission__metrics {
-    grid-template-columns: 1fr;
   }
 }
 
@@ -1504,371 +1487,6 @@ summary {
   gap: 6px;
 }
 
-.strategy-command-center {
-  grid-column: 1 / -1;
-}
-
-.selected-mission,
-.strategy-funnel,
-.strategy-card-grid,
-.strategy-lower-grid {
-  display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 6px;
-  margin-bottom: 8px;
-}
-
-.selected-mission {
-  grid-template-columns: repeat(5, minmax(0, 1fr));
-}
-
-.selected-mission p {
-  grid-column: 1 / -1;
-  color: var(--text-muted);
-}
-
-.selected-mission div,
-.funnel-step,
-.strategy-card,
-.strategy-plan-panel,
-.strategy-notice {
-  border: 1px solid var(--border);
-  border-radius: 3px;
-  background: #070909;
-  padding: 6px;
-}
-
-.selected-mission span,
-.funnel-step span,
-.strategy-card-head span,
-.strategy-meta,
-.strategy-table caption {
-  color: var(--text-muted);
-  font-size: .62rem;
-  text-transform: uppercase;
-}
-
-.selected-mission strong,
-.funnel-step strong,
-.strategy-card-head strong {
-  display: block;
-  color: var(--text);
-  font-family: var(--mono);
-  font-size: .84rem;
-}
-
-.strategy-funnel {
-  grid-template-columns: repeat(4, minmax(0, 1fr));
-}
-
-.funnel-step {
-  position: relative;
-}
-
-.funnel-step:not(:last-child)::after {
-  content: ">";
-  position: absolute;
-  right: -6px;
-  top: 50%;
-  color: var(--accent);
-  transform: translateY(-50%);
-}
-
-.strategy-table-wrap {
-  overflow-x: auto;
-  margin-bottom: 8px;
-}
-
-.strategy-table {
-  width: 100%;
-  border-collapse: collapse;
-  font-size: .68rem;
-}
-
-.strategy-table th,
-.strategy-table td {
-  border: 1px solid var(--border);
-  padding: 4px 5px;
-  text-align: left;
-  white-space: nowrap;
-}
-
-.strategy-table th {
-  color: var(--accent);
-  font-weight: 800;
-}
-
-.strategy-card-grid {
-  align-items: start;
-}
-
-.primary-strategy-focus {
-  margin-bottom: 8px;
-}
-
-.focused-strategy-strip {
-  margin-bottom: 8px;
-}
-
-.focused-strategy-strip > .section-label {
-  margin-bottom: 5px;
-}
-
-
-.strategy-card.is-primary {
-  border-color: var(--border-hot);
-  background: #090d0c;
-}
-
-.strategy-card.is-primary .strategy-card-head strong {
-  color: var(--accent);
-}
-
-.strategy-card-head {
-  display: flex;
-  align-items: baseline;
-  justify-content: space-between;
-  gap: 8px;
-  margin-bottom: 4px;
-}
-
-.strategy-meta {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 5px;
-  margin-bottom: 5px;
-}
-
-.strategy-key-grid {
-  display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 5px;
-}
-
-.strategy-readable-line {
-  margin: 6px 0;
-  color: var(--text);
-  font-size: .78rem;
-  line-height: 1.35;
-}
-
-.strategy-readable-block {
-  display: grid;
-  gap: 4px;
-  margin-top: 6px;
-}
-
-.strategy-readable-block p {
-  margin: 0;
-  color: var(--text-muted);
-  font-size: .72rem;
-  line-height: 1.35;
-}
-
-.strategy-readable-block strong {
-  color: var(--text);
-  font-weight: 650;
-}
-
-.strategy-command-center .section-header {
-  display: flex;
-  align-items: flex-start;
-  justify-content: space-between;
-  gap: 14px;
-  margin-bottom: 8px;
-}
-
-.engine-status,
-.strategy-latency {
-  border: 1px solid var(--border);
-  background: #050607;
-  color: var(--accent);
-  font-family: var(--mono);
-  font-size: .68rem;
-  padding: 4px 7px;
-  text-transform: uppercase;
-  white-space: nowrap;
-}
-
-.strategy-loading-state,
-.strategy-error-state {
-  border: 1px solid var(--border);
-  background: #050607;
-  color: var(--text);
-  font-family: var(--mono);
-  margin: 8px 0;
-  padding: 8px;
-}
-
-.strategy-error-state h3 {
-  color: var(--bear);
-  font-size: .78rem;
-  margin: 0 0 4px;
-}
-
-.strategy-error-state pre {
-  overflow: auto;
-  white-space: pre-wrap;
-}
-
-.strategy-missions {
-  display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 8px;
-  margin-top: 8px;
-}
-
-.strategy-mission {
-  border: 1px solid var(--border);
-  border-radius: 3px;
-  background: #070909;
-  padding: 8px;
-}
-
-.strategy-mission--primary {
-  border-color: rgba(139, 183, 240, .72);
-}
-
-.strategy-mission--safe {
-  border-color: rgba(220, 183, 102, .58);
-}
-
-.strategy-mission--defensive {
-  border-color: rgba(149, 160, 178, .5);
-}
-
-.strategy-mission__header {
-  display: flex;
-  align-items: flex-start;
-  justify-content: space-between;
-  gap: 8px;
-  margin-bottom: 8px;
-}
-
-.strategy-mission__category,
-.strategy-mission__subtitle,
-.strategy-action,
-.strategy-mission__metrics span,
-.strategy-mission__metrics small,
-.strategy-mission__plan dt,
-.strategy-mission__notice {
-  font-family: var(--mono);
-  font-size: .62rem;
-  text-transform: uppercase;
-}
-
-.strategy-mission__category {
-  color: var(--text);
-}
-
-.strategy-mission__subtitle,
-.strategy-mission__metrics span,
-.strategy-mission__metrics small,
-.strategy-mission__plan dt,
-.strategy-mission__notice {
-  color: var(--text-muted);
-}
-
-.strategy-action {
-  border: 1px solid currentColor;
-  padding: 3px 6px;
-  white-space: nowrap;
-}
-
-.strategy-action--bull {
-  color: var(--bull);
-}
-
-.strategy-action--balanced {
-  color: var(--balanced);
-}
-
-.strategy-action--bear {
-  color: var(--bear);
-}
-
-.strategy-mission__title {
-  color: var(--text);
-  font-size: .95rem;
-  margin: 0 0 8px;
-}
-
-.strategy-mission__metrics {
-  display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 6px;
-  margin-bottom: 8px;
-}
-
-.strategy-mission__metrics div,
-.strategy-mission__plan div {
-  border: 1px solid var(--border);
-  background: #050607;
-  padding: 6px;
-}
-
-.strategy-mission__metrics strong {
-  display: block;
-  color: var(--text);
-  font-family: var(--mono);
-  font-size: .82rem;
-  margin-top: 2px;
-}
-
-.strategy-mission__metrics small {
-  display: block;
-  margin-top: 3px;
-  text-transform: none;
-}
-
-.strategy-mission__plan {
-  display: grid;
-  gap: 6px;
-  margin: 0 0 8px;
-}
-
-.strategy-mission__plan dd {
-  color: var(--text);
-  line-height: 1.35;
-  margin: 2px 0 0;
-}
-
-.strategy-mission__why {
-  margin-top: 8px;
-}
-
-.strategy-mission__why h4 {
-  color: var(--text);
-  font-family: var(--mono);
-  font-size: .68rem;
-  margin: 0 0 5px;
-  text-transform: uppercase;
-}
-
-.strategy-mission__why ul {
-  margin: 0;
-  padding-left: 16px;
-  color: var(--text-muted);
-}
-
-.strategy-mission__why li {
-  margin-bottom: 3px;
-}
-
-.strategy-mission__summary {
-  border-top: 1px solid var(--border);
-  color: var(--text);
-  line-height: 1.4;
-  margin: 8px 0 0;
-  padding-top: 8px;
-}
-
-.strategy-mission__notice,
-.strategy-disclaimer {
-  color: var(--text-muted);
-  margin: 7px 0 0;
-}
-
 .commander[data-signal="STRONG_BUY"],
 .commander[data-signal="BUY"] {
   --commander-accent: var(--bull);
@@ -1899,59 +1517,6 @@ summary {
   font-size: .7rem;
   margin: 0 0 6px;
   text-transform: uppercase;
-}
-
-.strategy-compatibility {
-  border: 1px solid var(--border);
-  color: var(--text-muted);
-  display: flex;
-  justify-content: space-between;
-  gap: 8px;
-  font-family: var(--mono);
-  font-size: .62rem;
-  margin-bottom: 7px;
-  padding: 4px 6px;
-  text-transform: uppercase;
-}
-
-.strategy-compatibility strong {
-  color: var(--bull);
-  font-weight: 700;
-}
-
-.strategy-compatibility.is-overridden {
-  border-color: rgba(237, 113, 128, .6);
-  color: var(--bear);
-}
-
-.strategy-compatibility.is-overridden strong {
-  color: var(--bear);
-}
-
-.strategy-details {
-  margin-top: 6px;
-}
-
-.strategy-details[open] {
-  max-height: 360px;
-  overflow: auto;
-}
-
-.strategy-card ul,
-.strategy-plan-panel ul {
-  margin: 5px 0 0;
-  padding-left: 16px;
-  color: var(--text-muted);
-}
-
-.strategy-card li,
-.strategy-plan-panel li {
-  margin-bottom: 2px;
-}
-
-.strategy-lower-grid {
-  grid-template-columns: repeat(5, minmax(0, 1fr));
-  margin-bottom: 0;
 }
 
 .running-man-panel {
@@ -2016,182 +1581,96 @@ summary {
   padding-top: .6rem;
 }
 
-.paper-trading-card {
+.paper-safety-copy {
+  color: var(--text-muted);
+  font-size: .72rem;
+  margin: 0;
+}
+
+.paper-wallet-card,
+.paper-position-card,
+.paper-trade-history-card {
   grid-column: 1 / -1;
-  border: 1px solid var(--border);
-  border-radius: var(--radius);
-  background: var(--surface);
-  padding: 1rem;
-  margin-top: 1rem;
 }
 
-.paper-trading-card[data-status="ready"] {
-  border-color: var(--bull);
-}
-
-.paper-trading-card[data-status="waiting"] {
-  border-color: var(--balanced);
-}
-
-.paper-trading-card[data-status="blocked"] {
-  border-color: var(--bear);
-}
-
-.paper-trading-card__header,
-.paper-trading-strategy__summary,
-.paper-trading-account,
-.paper-trading-safety {
+.paper-panel__header {
   display: flex;
   justify-content: space-between;
   gap: 1rem;
   align-items: flex-start;
+  margin-bottom: 8px;
 }
 
-.paper-trading-card__subtitle,
-.paper-trading-strategy__description {
+.paper-wallet-grid,
+.paper-position-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 6px;
+}
+
+.paper-wallet-metric,
+.paper-position-metric {
+  border: 1px solid var(--border);
+  background: #070909;
+  padding: 6px;
+}
+
+.paper-wallet-metric span,
+.paper-position-metric span {
+  display: block;
   color: var(--text-muted);
-}
-
-.paper-trading-status,
-.paper-trading-status-badge,
-.paper-trading-strategy__label,
-.paper-trading-account,
-.paper-trading-safety,
-.paper-trading-price-grid span,
-.paper-trading-metric span {
   font-family: var(--mono);
   font-size: .62rem;
   text-transform: uppercase;
 }
 
-.paper-trading-status,
-.paper-trading-status-badge {
-  border: 1px solid currentColor;
-  padding: 4px 7px;
+.paper-wallet-metric strong,
+.paper-position-metric strong {
+  display: block;
+  color: var(--text);
+  font-family: var(--mono);
+  margin-top: 2px;
+}
+
+.paper-wallet-metric--profit strong,
+.paper-position-metric--profit strong {
+  color: var(--bull);
+}
+
+.paper-wallet-metric--loss strong,
+.paper-position-metric--loss strong {
+  color: var(--bear);
+}
+
+.paper-safety-copy {
+  border-top: 1px solid var(--border);
+  margin-top: 8px;
+  padding-top: 7px;
+  text-transform: uppercase;
+}
+
+.paper-history-table-wrap {
+  overflow-x: auto;
+}
+
+.paper-history-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: .68rem;
+}
+
+.paper-history-table th,
+.paper-history-table td {
+  border: 1px solid var(--border);
+  padding: 4px 5px;
+  text-align: left;
   white-space: nowrap;
 }
 
-.paper-trading-status-badge--ready {
-  color: var(--bull);
-}
-
-.paper-trading-status-badge--waiting {
-  color: var(--balanced);
-}
-
-.paper-trading-status-badge--blocked {
-  color: var(--bear);
-}
-
-.paper-trading-strategy {
-  border-top: 1px solid var(--border);
-  margin-top: .8rem;
-  padding-top: .8rem;
-}
-
-.paper-trading-strategy__label,
-.paper-trading-account,
-.paper-trading-safety,
-.paper-trading-metric span,
-.paper-trading-price-grid span {
-  color: var(--text-muted);
-}
-
-.paper-trading-strategy__title {
-  display: block;
-  margin-top: .25rem;
-  color: var(--text);
-  font-size: 1rem;
-}
-
-.paper-trading-safety,
-.paper-trading-account {
-  flex-wrap: wrap;
-  justify-content: flex-start;
-  gap: .4rem;
-  margin-top: .5rem;
-}
-
-.paper-trading-safety span,
-.paper-trading-account span {
-  border: 1px solid var(--border);
-  background: #050607;
-  padding: 3px 6px;
-}
-
-.paper-trading-safety span {
-  color: var(--balanced);
-}
-
-.paper-trading-metrics {
-  display: grid;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
-  gap: .75rem;
-  margin-top: 1rem;
-}
-
-.paper-trading-metric {
-  border: 1px solid var(--border);
-  padding: .75rem;
-  background: var(--surface-elevated);
-}
-
-.paper-trading-metric span {
-  display: block;
-}
-
-.paper-trading-metric strong {
-  display: block;
-  margin-top: .35rem;
-  font-size: 1.05rem;
-}
-
-.paper-trading-metric--profit strong {
-  color: var(--bull);
-}
-
-.paper-trading-metric--loss strong {
-  color: var(--bear);
-}
-
-.paper-trading-price-plan {
-  margin-top: 1rem;
-}
-
-.paper-trading-price-grid {
-  display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: .75rem;
-}
-
-.paper-trading-price-grid > div {
-  border: 1px solid var(--border);
-  padding: .75rem;
-}
-
-.paper-trading-price-grid strong {
-  display: block;
-  margin-top: .35rem;
-}
-
-.paper-trading-entry-condition,
-.paper-trading-exit-conditions,
-.paper-trading-rejections {
-  border-top: 1px solid var(--border);
-  margin-top: 1rem;
-  padding-top: 1rem;
-}
-
-.paper-trading-conditions ul {
-  margin: .4rem 0 0;
-  padding-left: 16px;
-  color: var(--text-muted);
-}
-
-.paper-trading-disclaimer {
-  margin-top: 1rem;
-  color: var(--text-muted);
-  font-size: .8rem;
+.paper-history-table th {
+  color: var(--accent);
+  font-weight: 800;
+  text-transform: uppercase;
 }
 
 .timeline-event {
@@ -2203,7 +1682,6 @@ summary {
 }
 
 .arena-card,
-.strategy-card,
 .hero-frame {
   animation: none;
 }
@@ -2265,10 +1743,7 @@ summary {
   .plan-grid,
   .tactical-grid,
   .mission-grid,
-  .timeline-list,
-  .selected-mission,
-  .strategy-card-grid,
-  .strategy-lower-grid {
+  .timeline-list {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 
@@ -2277,13 +1752,16 @@ summary {
   .plan-grid,
   .reason-grid,
   .timeline-panel,
-  .paper-trading-card,
+  .paper-wallet-card,
+  .paper-position-card,
+  .paper-trade-history-card,
   #newsSection,
   #failedArenas {
     grid-column: 1 / -1;
   }
 
-  .paper-trading-metrics {
+  .paper-wallet-grid,
+  .paper-position-grid {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 }
@@ -2297,11 +1775,7 @@ summary {
   .mission-grid,
   .tactical-grid,
   .timeline-list,
-  .selected-mission,
-  .strategy-funnel,
-  .strategy-card-grid,
-  .strategy-key-grid,
-  .strategy-lower-grid,
+  .arena-key-grid,
   .battle-copy,
   .commander-brief {
     grid-template-columns: 1fr;
@@ -2315,20 +1789,17 @@ summary {
     grid-column: 1 / -1;
   }
 
-  .paper-trading-card__header,
-  .paper-trading-strategy__summary {
+  .paper-wallet-grid,
+  .paper-position-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .paper-panel__header {
     display: block;
   }
 
-  .paper-trading-status,
-  .paper-trading-status-badge {
-    display: inline-block;
+  .paper-panel__header button {
     margin-top: 6px;
-  }
-
-  .paper-trading-metrics,
-  .paper-trading-price-grid {
-    grid-template-columns: 1fr;
   }
 
   .running-man-panel__header {

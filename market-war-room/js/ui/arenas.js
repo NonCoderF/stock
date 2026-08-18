@@ -35,7 +35,7 @@ function renderArena(arena) {
     <article class="arena-card">
       <div class="arena-body">
         <div class="arena-head"><h3>${escape(arena.label)}</h3><span class="pill">${escape(arena.role)}</span></div>
-        <div class="strategy-key-grid">
+        <div class="arena-key-grid">
           ${metric("Winner", title(signals.preliminaryWinner))}
           ${metric("Bull", signals.deterministicBullEvidence)}
           ${metric("Bear", signals.deterministicBearEvidence)}

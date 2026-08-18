@@ -19,9 +19,9 @@
         <h1>MARKET WAR ROOM</h1>
         <p class="statement">Watch every battlefield.<br>Bid only when the evidence aligns.</p>
         <p class="supporting-copy">
-          Each timeframe is a separate arena. Commander AI compares the immediate battle,
-          higher-timeframe reinforcement, and wider market context before issuing one
-          spectator decision.
+          Each timeframe is a separate arena. The local engine compares the immediate
+          battle, higher-timeframe reinforcement, and wider market context before
+          issuing one spectator decision.
         </p>
       </div>
       <div class="feed-status" aria-live="polite">
@@ -164,7 +164,7 @@
 
       <section id="emptyState" class="empty-state">
         <h2>Choose an instrument and observe the battle.</h2>
-        <p>Commander AI will compare the entry, confirmation, and context arenas before issuing one spectator call.</p>
+        <p>The local engine will compare the entry, confirmation, and context arenas before issuing one spectator call.</p>
       </section>
 
       <section id="resultShell" class="result-shell" hidden>
@@ -172,33 +172,9 @@
         <section id="commanderHero" class="commander-hero" aria-live="polite"></section>
         <section id="battleCard" class="battlefield-status"></section>
         <section id="chartSection" class="panel chart-panel"></section>
-        <section id="strategyCommandCenter" class="panel strategy-command-center" aria-labelledby="strategy-command-center-title" hidden></section>
-        <section
-          id="paper-trading-card"
-          class="paper-trading-card"
-          aria-labelledby="paper-trading-title"
-          hidden
-        >
-          <header class="paper-trading-card__header">
-            <div>
-              <p class="eyebrow">Paper Trading</p>
-              <h2 id="paper-trading-title">Paper Trade Simulation</h2>
-              <p id="paper-trading-subtitle" class="paper-trading-card__subtitle">
-                Simulated entry, risk, target, and projected P&amp;L.
-              </p>
-            </div>
-
-            <div id="paper-trading-status" class="paper-trading-status" aria-live="polite">
-              Idle
-            </div>
-          </header>
-
-          <div id="paper-trading-strategy" class="paper-trading-strategy"></div>
-          <div id="paper-trading-metrics" class="paper-trading-metrics"></div>
-          <div id="paper-trading-plan" class="paper-trading-plan"></div>
-          <div id="paper-trading-conditions" class="paper-trading-conditions"></div>
-          <p id="paper-trading-disclaimer" class="paper-trading-disclaimer"></p>
-        </section>
+        <section id="paper-wallet-card" class="panel paper-wallet-card" hidden></section>
+        <section id="paper-position-card" class="panel paper-position-card" hidden></section>
+        <section id="paper-trade-history-card" class="panel paper-trade-history-card" hidden></section>
         <section id="arenasSection" class="panel arenas-panel"></section>
         <article id="commanderCard" class="panel commander-panel" aria-live="polite"></article>
         <div class="plan-grid">
@@ -216,18 +192,16 @@
 
       <section class="safety-statement">
         Market calculations and the bull-vs-bear signal are performed locally in the browser.
-        AI explanations and strategies cannot override the local market signal. Success
-        estimates are uncalibrated model assessments, not historical probabilities or
-        guarantees. No order is placed by this application.
+        No strategy service is called. Success estimates are uncalibrated local
+        assessments, not historical probabilities or guarantees. No order is placed by
+        this application.
       </section>
     </main>
 
     <footer id="telemetry" class="telemetry">
       <span>Market &#8212;</span>
-      <span>AI &#8212;</span>
       <span>Total &#8212;</span>
-      <span>Model &#8212;</span>
-      <span>Stored &#8212;</span>
+      <span>Engine Local</span>
     </footer>
   </body>
 </html>

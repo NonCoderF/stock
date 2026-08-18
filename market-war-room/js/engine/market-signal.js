@@ -179,43 +179,6 @@ export function buildLocalSignalExplanation(marketSignal) {
   }
 }
 
-export function reconcileStrategiesWithSignal(strategies, marketSignal) {
-  if (!Array.isArray(strategies)) {
-    return [];
-  }
-
-  return strategies.map((strategy) => {
-    const copy = { ...strategy };
-
-    if (
-      copy.action === "BUY_NOW" &&
-      (marketSignal.signal === "SELL" || marketSignal.signal === "STRONG_SELL")
-    ) {
-      copy.originalAction = copy.action;
-      copy.action = "SKIP";
-      copy.engineOverride = {
-        applied: true,
-        status: "REJECTED_BY_BEARISH_SIGNAL",
-        reason: "Bear strength exceeds bull strength."
-      };
-      copy.summary = `Rejected by the local bull-vs-bear engine. ${copy.summary || ""}`.trim();
-    }
-
-    if (copy.action === "BUY_NOW" && marketSignal.signal === "WAIT") {
-      copy.originalAction = copy.action;
-      copy.action = "WAIT";
-      copy.engineOverride = {
-        applied: true,
-        status: "DOWNGRADED_TO_WAIT",
-        reason: "The deterministic engine does not support immediate entry."
-      };
-      copy.summary = `Downgraded to WAIT by the local bull-vs-bear engine. ${copy.summary || ""}`.trim();
-    }
-
-    return copy;
-  });
-}
-
 export function hasSignalChanged(previous, next) {
   if (!previous) {
     return true;

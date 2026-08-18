@@ -8,8 +8,7 @@ export function renderMarketView(root, context) {
     fact("Exchange", request.exchange),
     fact("Current", money(entry?.signals?.latestPrice, request.exchange)),
     fact("Engine", "Local"),
-    fact("Market", context.marketStatus),
-    fact("Strategy", context.strategyStatus)
+    fact("Market", context.marketStatus)
   ].join("");
 }
 
@@ -59,7 +58,6 @@ export function renderTiming(root, request, decision) {
 export function renderTelemetry(root, metadata) {
   root.telemetry.innerHTML = `
     <span>Market <strong>${latency(metadata.marketMs)}</strong></span>
-    <span>AI <strong>${latency(metadata.strategyMs)}</strong></span>
     <span>Total <strong>${latency(metadata.totalMs)}</strong></span>
     <span>Engine <strong>Local</strong></span>
   `;

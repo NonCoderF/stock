@@ -1,17 +1,13 @@
 export const state = {
   status: "IDLE",
   marketStatus: "IDLE",
-  strategyStatus: "IDLE",
   request: null,
   market: null,
   decision: null,
-  strategy: {
-    status: "IDLE",
-    strategies: [],
-    selectedSimulationStrategy: null,
-    paperTrading: null,
-    metadata: null,
-    error: null
+  paper: {
+    account: null,
+    lastUpdatedAt: null,
+    autoEntryEnabled: false
   },
   signal: {
     previous: null,
@@ -41,7 +37,6 @@ export const state = {
 export function resetForRequest(request, controller) {
   state.status = "LOADING";
   state.marketStatus = "LOADING";
-  state.strategyStatus = "IDLE";
   state.request = request;
   state.controller = controller;
   state.error = null;

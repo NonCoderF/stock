@@ -1,14 +1,10 @@
 # MARKET WAR ROOM
 
-MARKET WAR ROOM is a standalone static command-center interface for a deterministic bull-vs-bear market signal with AI explanation. It is not a trading platform, does not place orders, and has no broker integration.
+MARKET WAR ROOM is a standalone static command-center interface for a deterministic bull-vs-bear market signal. It is not a trading platform, does not place orders, and has no broker integration.
 
 ## Product Philosophy
 
-The user is a spectator with limited capital. The browser observes multiple timeframe battlefields, renders local market intelligence, calculates the authoritative bull-vs-bear signal, then asks Commander AI for three concise human-readable paths:
-
-1. Best Opportunity
-2. Safer Alternative
-3. Capital Protection
+The user is a spectator with limited capital. The browser observes multiple timeframe battlefields, renders local market intelligence, and calculates the authoritative bull-vs-bear signal locally.
 
 ## Project Structure
 
@@ -32,9 +28,7 @@ Configured in `config.js`:
 ```js
 window.APP_CONFIG = {
   MARKET_URL:
-    "https://jmyqvrvrguhfujgombqe.supabase.co/functions/v1/market",
-  ANALYZE_MARKET_URL:
-    "https://jmyqvrvrguhfujgombqe.supabase.co/functions/v1/analyze-market"
+    "https://jmyqvrvrguhfujgombqe.supabase.co/functions/v1/market"
 };
 ```
 
@@ -82,126 +76,74 @@ It does not imply short selling or automatic order execution.
 
 Signal confidence is calculated locally from the bull-bear difference and arena alignment. It is labeled `SIGNAL CONFIDENCE`, never probability of profit.
 
-Raw candles are used for the chart and local indicators. Raw candles are not sent to `analyze-market`.
+Raw candles are used for the chart and local indicators. No compact evidence is sent to a strategy or analysis service.
 
-## Analyze Market Request
+## Frontend Paper Engine
 
-The frontend sends compact evidence only:
-
-```json
-{
-  "mission": {
-    "symbol": "RELIANCE",
-    "exchange": "NSE",
-    "capital": 10000,
-    "riskProfile": "CONTROLLED",
-    "maximumHoldingMinutes": 30
-  },
-  "quote": {
-    "price": 1287.8,
-    "previousClose": 1292.9,
-    "dayHigh": 1299,
-    "dayLow": 1286,
-    "changePercent": -0.394
-  },
-  "arenas": [],
-  "relevantNews": []
-}
-```
-
-## Human-Readable Strategy Response
-
-The frontend reads the strategy response from:
-
-```js
-payload.data.strategies
-```
-
-The endpoint returns exactly three strategies:
-
-- `BEST_OPPORTUNITY`
-- `SAFER_ALTERNATIVE`
-- `CAPITAL_PROTECTION`
-
-Each card displays category, title, action, confidence, risk level, holding time, entry, stop loss, target, reasons, and summary.
-
-Each strategy may also include:
-
-```js
-strategy.simulationProposal
-strategy.simulationPlan
-```
-
-`simulationPlan` is the server-deterministic read-only paper-trade plan for that strategy. It can include eligibility, status, available capital, applied allocation percentage, allocation amount, entry price, stop-loss price, target price, quantity, invested amount, cash reserve, risk per share, projected net loss at stop, projected net profit at target, reward-to-risk values, maximum holding minutes, entry condition, exit conditions, rejection reasons, and disclaimer.
-
-The response may also include:
-
-```js
-payload.data.paperTrading
-```
-
-`paperTrading` describes the paper-only account context, including enabled state, mode, initial capital, currency, equity, P&L placeholders, execution authority, entry price policy, exit priority, and safety disclaimer.
-
-The frontend no longer expects `data.strategyCandidates`, `data.strategyBook`, or `data.decision.strategyBook`.
-
-## Paper Trade Simulation Card
-
-Below the three Commander mission cards, the frontend renders one additional `PAPER TRADE SIMULATION` card when both `data.paperTrading` and a selected strategy `simulationPlan` are available.
-
-The strategy selection rule is:
-
-1. Prefer the first strategy whose `simulationPlan.eligible === true`.
-2. Fall back to the `BEST_OPPORTUNITY` strategy.
-3. Fall back to the first strategy.
-
-The selected plan is reconciled locally with the deterministic bull-vs-bear signal before display. If the local signal is `SELL` or `STRONG_SELL`, the card never displays `READY FOR PAPER ENTRY`; the plan is marked `NO_SIMULATED_ENTRY` with a rejection reason from the browser. If the local signal is `WAIT` and the server says ready, the card displays `WAITING FOR TRIGGER`.
-
-The card displays the paper account state, selected strategy, readiness status, capital and allocation, quantity, entry/stop/target price plan, risk per share, gross and net reward-to-risk, maximum holding time, projected net loss at stop, projected net profit at target, projected return percentage, entry condition, exit conditions, rejection reasons, and disclaimer.
-
-Projected P&L is labeled as projected only. The card always shows:
+The browser owns the deterministic paper engine:
 
 ```text
-SIMULATION ONLY
-NO REAL ORDER PLACED
-PROJECTED P&L IS NOT GUARANTEED
+MARKET API
+    -> FRONTEND DETERMINISTIC ENGINE
+       -> indicators
+       -> bull/bear evidence
+       -> campaign
+       -> BUY / WAIT / SELL
+       -> paper position sizing
+       -> simulated entry
+       -> paper wallet
+       -> live mark-to-market P&L
+       -> stop / target / time / signal exit
+       -> Running Man client snapshot
 ```
 
-This phase is a read-only preview. It does not open a simulated position, deduct wallet cash, update unrealized P&L, auto-close at stop or target, or persist trade history. Those behaviors belong to a future live paper-position phase.
+The paper wallet is persisted in localStorage:
+
+```text
+market-war-room:paper-account:v1
+```
+
+It stores starting capital, cash, equity, realized P&L, unrealized P&L, the open paper position, and closed paper trades. This is browser state, not broker state; it can be edited or cleared by the user and should not be treated as trusted financial records.
+
+Position sizing uses local risk policy by profile:
+
+- `CONSERVATIVE`: 0.5% max risk, 50% max allocation
+- `CONTROLLED`: 1.0% max risk, 70% max allocation
+- `AGGRESSIVE`: 1.5% max risk, 90% max allocation
+
+The manual paper entry does not depend on AI proposal fields, stop-loss, target, or allocation math. It buys one paper share at the latest valid quote and holds it for `request.maximumHoldingMinutes`.
+
+Opening rules:
+
+- no paper position is already open
+- latest market quote must be valid
+- paper cash must cover one share plus estimated entry charges
+- selected holding time must be valid
+
+The actual simulated entry always uses the latest market quote available in the browser.
+
+Mark-to-market P&L, elapsed-time exit, wallet updates, manual paper exit, and reset behavior run instantly in the browser. These operations do not call OpenAI or an analysis endpoint.
+
+Exit reasons are:
+
+- `MAXIMUM_HOLDING_TIME`
+- `MANUAL_PAPER_EXIT`
+
+Safety copy is always shown:
+
+```text
+PAPER TRADING ONLY
+NO REAL ORDER IS PLACED
+SIMULATED P&L DOES NOT GUARANTEE REAL-WORLD RESULTS
+```
 
 ## Running Man Persistence
 
-Running Man stores a timestamped sequence of observations so the system can later replay how market evidence, AI strategies, and paper-trade plans evolved.
+Running Man stores a timestamped sequence of local observations so the system can later replay how market evidence and paper-trade state evolved.
 
-The browser creates one stable `runId` for an active observation session and sends a zero-based `observationNo` with each `analyze-market` request:
-
-```json
-{
-  "mission": {},
-  "quote": {},
-  "arenas": [],
-  "relevantNews": [],
-  "runId": "a1b2c3d4-...",
-  "observationNo": 0
-}
-```
+The browser creates one stable `runId` for an active observation session and increments a zero-based `observationNo` for each local observation.
 
 The first observation in a run is `0`, then `1`, `2`, `3`, and so on. A live polling loop keeps the same `runId`; it does not create a new UUID for every poll. The `New Run` control starts a fresh run without automatically triggering market analysis.
-
-The backend may return:
-
-```js
-payload.data.persistence
-```
-
-with informational fields such as `enabled`, `status`, `table`, `runId`, `observationNo`, `rowId`, `persistedAt`, and `error`. Supported statuses are `SAVED`, `SKIPPED`, and `ERROR`.
-
-Persistence is a separate error domain. A persistence failure is logged and shown as a compact non-blocking warning:
-
-```text
-History save failed. Analysis remains available.
-```
-
-It does not replace market errors, does not count as a strategy error, does not hide strategies, does not block paper-trade rendering, and never changes the local bull-vs-bear authority.
 
 Running Man client state is stored in SessionStorage under:
 
@@ -211,13 +153,11 @@ market-war-room:running-man
 
 The stored client state includes `runId`, the next `observationNo`, whether the run is active, the last persistence summary, and the started timestamp. A new browser session may create a new run.
 
-The local observation timeline stores compact persistence metadata only: observed time, shortened run ID, observation number, saved state, persisted timestamp, signal, bull strength, and bear strength. It does not store the full backend persistence response for every timeline item.
-
-The existing `data.strategies` and `data.paperTrading` nodes remain backward compatible. Future phases can build replay dashboards or richer forward-observation history from the persisted Running Man rows.
+The local observation timeline stores compact metadata only: observed time, shortened run ID, observation number, signal, bull strength, and bear strength.
 
 ## Commander Mapping
 
-Commander uses only the deterministic market signal. AI strategy actions cannot override it.
+Commander uses only the deterministic market signal.
 
 Signal mapping:
 
@@ -227,28 +167,13 @@ Signal mapping:
 - `SELL` -> `STAY AWAY FROM LONGS`
 - `STRONG_SELL` -> `BEARS CONTROL THE FIELD`
 
-## AI Advisory Role
-
-AI may explain the battlefield and suggest strategy cards, but it cannot decide Commander action.
-
-If AI returns `BUY_NOW` while the local signal is `WAIT`, the card is downgraded to `WAIT`.
-
-If AI returns `BUY_NOW` while the local signal is `SELL` or `STRONG_SELL`, the card is rejected with a `LOCAL ENGINE OVERRIDE` badge.
-
 ## Loading Behavior
 
-The battlefield renders before AI completes:
+The battlefield renders after the market engine completes:
 
 ```text
 EAGLE VIEW READY
-Commander AI is designing three missions...
 ```
-
-The market chart and arenas remain visible while strategy generation is running.
-
-## Retry Commander
-
-`Retry Commander` calls only `/analyze-market` using the latest compact evidence. It does not refetch `/market`.
 
 ## SessionStorage
 
@@ -257,24 +182,11 @@ The app stores:
 ```text
 market-war-room:last-request
 market-war-room:last-response
-market-war-room:last-strategies
 ```
-
-`last-strategies` stores only:
-
-```js
-{
-  strategies,
-  metadata,
-  savedAt
-}
-```
-
-Raw OpenAI payloads are not persisted.
 
 ## Safety Notice
 
-AI-generated plans are uncalibrated model assessments, not historical probabilities or guarantees. AI explanations and strategies cannot override the local market signal. Market data may be delayed or incomplete. No order is placed by this application.
+Local estimates are not historical probabilities or guarantees. Market data may be delayed or incomplete. No order is placed by this application.
 
 ## Local Development
 

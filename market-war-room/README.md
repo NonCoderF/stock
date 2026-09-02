@@ -1,3 +1,4 @@
+![Screenshot](screenshot.png)
 # MARKET WAR ROOM
 
 MARKET WAR ROOM is a standalone static command-center interface for a deterministic bull-vs-bear market signal. It is not a trading platform, does not place orders, and has no broker integration.

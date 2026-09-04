@@ -4,11 +4,7 @@ export const state = {
   request: null,
   market: null,
   decision: null,
-  paper: {
-    account: null,
-    lastUpdatedAt: null,
-    autoEntryEnabled: false
-  },
+  directionAnalysis: null,
   signal: {
     previous: null,
     current: null,

@@ -79,68 +79,79 @@ Signal confidence is calculated locally from the bull-bear difference and arena 
 
 Raw candles are used for the chart and local indicators. No compact evidence is sent to a strategy or analysis service.
 
-## Frontend Paper Engine
+## Market Direction Analyzer
 
-The browser owns the deterministic paper engine:
+The frontend includes a deterministic Market Direction Analyzer. It calculates a local technical direction from OHLCV candles and explains the indicator read in plain English. It does not call an AI or LLM API.
 
-```text
-MARKET API
-    -> FRONTEND DETERMINISTIC ENGINE
-       -> indicators
-       -> bull/bear evidence
-       -> campaign
-       -> BUY / WAIT / SELL
-       -> paper position sizing
-       -> simulated entry
-       -> paper wallet
-       -> live mark-to-market P&L
-       -> stop / target / time / signal exit
-       -> Running Man client snapshot
+Use:
+
+```js
+import { analyzeMarket } from "./js/analysis/market-analyzer.js";
+
+const result = analyzeMarket(candles, {
+  includeCurrentCandle: true
+});
 ```
 
-The paper wallet is persisted in localStorage:
+The analyzer accepts OHLCV candles with:
 
-```text
-market-war-room:paper-account:v1
+```ts
+{
+  timestamp: number;
+  open: number;
+  high: number;
+  low: number;
+  close: number;
+  volume: number;
+}
 ```
 
-It stores starting capital, cash, equity, realized P&L, unrealized P&L, the open paper position, and closed paper trades. This is browser state, not broker state; it can be edited or cleared by the user and should not be treated as trusted financial records.
+Incoming candles are sorted by timestamp, duplicate timestamps are collapsed, invalid numbers are removed, and NaN values are not allowed into the result. The analyzer returns `INSUFFICIENT_DATA` instead of forcing a direction when fewer than 60 valid candles are available. At least 100 candles are preferred when the feed provides them.
 
-Position sizing uses local risk policy by profile:
-
-- `CONSERVATIVE`: 0.5% max risk, 50% max allocation
-- `CONTROLLED`: 1.0% max risk, 70% max allocation
-- `AGGRESSIVE`: 1.5% max risk, 90% max allocation
-
-The manual paper entry does not depend on AI proposal fields, stop-loss, target, or allocation math. It buys one paper share at the latest valid quote and holds it for `request.maximumHoldingMinutes`.
-
-Opening rules:
-
-- no paper position is already open
-- latest market quote must be valid
-- paper cash must cover one share plus estimated entry charges
-- selected holding time must be valid
-
-The actual simulated entry always uses the latest market quote available in the browser.
-
-Mark-to-market P&L, elapsed-time exit, wallet updates, manual paper exit, and reset behavior run instantly in the browser. These operations do not call OpenAI or an analysis endpoint.
-
-Exit reasons are:
-
-- `MAXIMUM_HOLDING_TIME`
-- `MANUAL_PAPER_EXIT`
-
-Safety copy is always shown:
+The score is:
 
 ```text
-PAPER TRADING ONLY
-NO REAL ORDER IS PLACED
-SIMULATED P&L DOES NOT GUARANTEE REAL-WORLD RESULTS
+VWAP + EMA + RSI + MACD + Market Structure + Volume
 ```
+
+Market Structure has the highest weight:
+
+```text
+Higher High + Higher Low => +2
+Lower High + Lower Low   => -2
+Mixed / unknown          =>  0
+```
+
+Other directional indicators contribute -1, 0, or +1. ADX and ATR are shown as context only. ADX classifies trend strength and ATR reports volatility; neither adds bull or bear points.
+
+Direction thresholds are centralized in:
+
+```text
+js/analysis/scoring/direction-score.js
+```
+
+The UI shows the calculated indicator direction, score, signal confidence, candle count, candle mode, and a simple indicator breakdown.
+
+## Related Stock Confirmation
+
+The main symbol is no longer reviewed in isolation. The form accepts at least three related symbols:
+
+```text
+ONGC,BPCL,IOC
+```
+
+For each related symbol, the frontend fetches the same entry timeframe used for the main symbol and runs the same local `analyzeMarket()` calculation. The related-stock result does not blindly override the main symbol direction, but the main confidence depends on this confirmation check:
+
+- most related stocks in the same direction => direction confirmed
+- some related stocks in the same direction => partly confirmed, confidence capped below high
+- most related stocks in the opposite direction => conflicting, confidence reduced to low
+- related stocks mixed or neutral => mixed context, high confidence is capped
+
+This keeps the analysis from depending on only one stock while still making the main symbol's own candles the primary evidence.
 
 ## Running Man Persistence
 
-Running Man stores a timestamped sequence of local observations so the system can later replay how market evidence and paper-trade state evolved.
+Running Man stores a timestamped sequence of local observations so the system can later replay how market evidence evolved.
 
 The browser creates one stable `runId` for an active observation session and increments a zero-based `observationNo` for each local observation.
 

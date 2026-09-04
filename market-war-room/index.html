@@ -71,6 +71,12 @@
             <p class="risk-copy" id="riskCopy">Balanced allocation and risk limits.</p>
             <p class="field-error" id="riskProfileError"></p>
           </div>
+          <div class="field related-field">
+            <label for="relatedSymbols">Related stocks</label>
+            <input id="relatedSymbols" name="relatedSymbols" type="text" value="ONGC,BPCL,IOC" maxlength="120" autocomplete="off" spellcheck="false" required>
+            <p class="risk-copy">Minimum 3 symbols, comma separated.</p>
+            <p class="field-error" id="relatedSymbolsError"></p>
+          </div>
           <div class="field">
             <label for="holdingPeriod">Maximum holding period</label>
             <select id="holdingPeriod" name="holdingPeriod">
@@ -172,9 +178,7 @@
         <section id="commanderHero" class="commander-hero" aria-live="polite"></section>
         <section id="battleCard" class="battlefield-status"></section>
         <section id="chartSection" class="panel chart-panel"></section>
-        <section id="paper-wallet-card" class="panel paper-wallet-card" hidden></section>
-        <section id="paper-position-card" class="panel paper-position-card" hidden></section>
-        <section id="paper-trade-history-card" class="panel paper-trade-history-card" hidden></section>
+        <section id="marketDirectionCard" class="panel market-direction-card" hidden></section>
         <section id="arenasSection" class="panel arenas-panel"></section>
         <article id="commanderCard" class="panel commander-panel" aria-live="polite"></article>
         <div class="plan-grid">

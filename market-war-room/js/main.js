@@ -1,4 +1,6 @@
-import { fetchAllArenas } from "./api/market-api.js";
+import { fetchAllArenas, fetchMarketArena } from "./api/market-api.js";
+import { analyzeMarket } from "./analysis/market-analyzer.js";
+import { applyRelatedConfirmation, buildRelatedConfirmation } from "./analysis/related-confirmation.js";
 import { buildArenaEvidence } from "./engine/arena-evidence.js";
 import { chooseArenas } from "./engine/arena-selector.js";
 import { buildCampaign } from "./engine/campaign.js";
@@ -10,16 +12,7 @@ import {
   hasSignalChanged
 } from "./engine/market-signal.js";
 import { buildCapitalPlan } from "./engine/risk-policy.js";
-import { openSimplePaperPosition } from "./engine/paper-entry.js";
-import { closePaperPosition } from "./engine/paper-exit.js";
-import { updatePaperSimulator } from "./engine/paper-simulator.js";
 import { state, appendObservation, resetForRequest } from "./state/app-state.js";
-import {
-  createPaperAccount,
-  persistPaperAccount,
-  resetPaperAccount,
-  restorePaperAccount
-} from "./state/paper-account.js";
 import { scheduleLoop, stopLoop } from "./state/live-observer.js";
 import {
   nextRunningManObservation,
@@ -32,10 +25,8 @@ import { renderArenas, renderBattle } from "./ui/arenas.js";
 import { renderChart } from "./ui/chart.js";
 import { renderCommander } from "./ui/commander.js";
 import { clearError, renderError } from "./ui/errors.js";
+import { renderMarketDirectionCard } from "./ui/market-direction-card.js";
 import { renderCapital, renderMarketView, renderTelemetry, renderTiming } from "./ui/market-view.js";
-import { renderOpenPaperPosition } from "./ui/paper-position.js";
-import { renderPaperTradeHistory } from "./ui/paper-trade-history.js";
-import { renderPaperWallet } from "./ui/paper-wallet.js";
 import { renderTimeline } from "./ui/timeline.js";
 
 const HOLDING_OPTIONS = {
@@ -66,16 +57,14 @@ document.addEventListener("DOMContentLoaded", () => {
   renderRunningManStatus(state.runningMan.lastPersistence);
   restoreSession();
   updateCurrency();
-  restorePaperAccountState();
-  renderPaperPanels();
 });
 
 function cacheElements() {
   [
-    "analysisForm", "symbol", "exchange", "capital", "riskProfile", "holdingPeriod", "pollInterval",
+    "analysisForm", "symbol", "exchange", "capital", "riskProfile", "relatedSymbols", "holdingPeriod", "pollInterval",
     "currencySymbol", "runButton", "cancelButton", "loadingPanel", "loadingText", "errorPanel",
     "emptyState", "resultShell", "marketFacts", "commanderHero", "commanderCard", "battleCard",
-    "arenasSection", "capitalPlan", "timingPlan", "chartSection", "reasoningSection", "sessionStatus",
+    "arenasSection", "capitalPlan", "timingPlan", "chartSection", "marketDirectionCard", "reasoningSection", "sessionStatus",
     "timelineSection", "newsSection", "failedArenas", "telemetry", "feedStatusText",
     "new-running-man-run"
   ].forEach((id) => {
@@ -98,15 +87,15 @@ function bindEvents() {
     startRunningManSession();
     renderRunningManStatus(null);
   });
-  document.addEventListener("click", (event) => {
-    if (event.target?.id === "simulate-paper-entry") simulatePaperEntry();
-    if (event.target?.id === "close-paper-position") closeOpenPaperPosition("MANUAL_PAPER_EXIT");
-    if (event.target?.id === "reset-paper-account") resetPaperAccountWithConfirmation();
-  });
   root.symbol.addEventListener("input", () => {
     const start = root.symbol.selectionStart;
     root.symbol.value = root.symbol.value.toUpperCase();
     root.symbol.setSelectionRange(start, start);
+  });
+  root.relatedSymbols.addEventListener("input", () => {
+    const start = root.relatedSymbols.selectionStart;
+    root.relatedSymbols.value = root.relatedSymbols.value.toUpperCase();
+    root.relatedSymbols.setSelectionRange(start, start);
   });
   root.exchange.addEventListener("change", updateCurrency);
   document.addEventListener("keydown", (event) => {
@@ -159,6 +148,15 @@ async function observe(request, options = {}) {
     state.marketStatus = "SUCCESS";
     state.market = market;
     state.decision = decision;
+    state.directionAnalysis = analyzeMarket(market.candles, {
+      includeCurrentCandle: true
+    });
+    applyRelatedConfirmation(state.directionAnalysis, await analyzeRelatedStocks({
+      request,
+      entryArena,
+      primaryAnalysis: state.directionAnalysis,
+      signal: controller.signal
+    }));
     state.lastUpdatedAt = new Date();
     renderMarketStage({ request, market, decision, marketMs: performance.now() - marketStarted, totalMs: performance.now() - started });
     const evidence = buildCompactEvidence(request, market, decision);
@@ -167,8 +165,6 @@ async function observe(request, options = {}) {
       ...evidence.quote
     };
     state.lastEvidence = evidence;
-    updatePaperSimulatorStage(evidence.quote.price);
-    renderPaperPanels();
     const runningManObservation = nextRunningManObservation();
     const latestPersistence = {
       runId: runningManObservation.runId,
@@ -216,6 +212,7 @@ function renderMarketStage({ request, market, decision, marketMs, totalMs }) {
   renderCommander(root, decision);
   renderBattle(root, decision);
   renderChart(root, market.candles);
+  renderMarketDirectionCard(root, state.directionAnalysis || analyzeMarket(market.candles));
   renderArenas(root, market.arenas);
   renderCapital(root, decision, request.exchange);
   renderTiming(root, request, decision);
@@ -235,7 +232,6 @@ function renderPostStage(totalMs) {
   renderTimeline(root, state.observations);
   renderTelemetry(root, { totalMs });
   renderEngineStatus(`Market Engine: ${state.marketStatus}`);
-  renderPaperPanels();
 }
 
 function prepareRunningManForRequest() {
@@ -245,88 +241,47 @@ function prepareRunningManForRequest() {
   }
 }
 
-function restorePaperAccountState() {
-  state.paper.account =
-    restorePaperAccount() || createPaperAccount(Number(root.capital?.value || 10000));
-  state.paper.lastUpdatedAt = new Date().toISOString();
-}
+async function analyzeRelatedStocks({ request, entryArena, primaryAnalysis, signal }) {
+  const relatedSymbols = request.relatedSymbols || [];
+  const settled = await Promise.allSettled(
+    relatedSymbols.map(async (symbol) => {
+      const result = await fetchMarketArena(
+        {
+          ...request,
+          symbol,
+          newsCount: 0
+        },
+        {
+          ...entryArena,
+          role: "ENTRY",
+          label: `${symbol} Related Check`
+        },
+        signal
+      );
 
-function renderPaperPanels() {
-  renderPaperWallet(state.paper.account);
-  renderOpenPaperPosition(state.paper.account?.openPosition || null);
-  renderPaperTradeHistory(state.paper.account?.trades || []);
-}
+      return {
+        symbol,
+        analysis: analyzeMarket(result.candles, {
+          includeCurrentCandle: true
+        })
+      };
+    })
+  );
 
-function updatePaperSimulatorStage(currentPrice) {
-  if (!state.paper.account) {
-    restorePaperAccountState();
-  }
-
-  updatePaperSimulator({
-    account: state.paper.account,
-    currentPrice,
-    marketSignal: state.signal.current,
-    riskProfile: state.request?.riskProfile
-  });
-  state.paper.lastUpdatedAt = new Date().toISOString();
-}
-
-function simulatePaperEntry() {
-  if (!state.paper.account) {
-    restorePaperAccountState();
-  }
-
-  const result = openSimplePaperPosition({
-    account: state.paper.account,
-    marketSignal: state.signal.current,
-    currentPrice: getCurrentPaperPrice(),
-    riskProfile: state.request?.riskProfile,
-    symbol: state.request?.symbol,
-    exchange: state.request?.exchange,
-    maximumHoldingMinutes: state.request?.maximumHoldingMinutes
-  });
-
-  if (!result.opened) {
-    renderPaperEntryMessage(result.reasons[0] || "Paper entry was blocked.");
-    return;
-  }
-
-  state.paper.lastUpdatedAt = new Date().toISOString();
-  persistPaperAccount(state.paper.account);
-  renderPaperEntryMessage("Bought one paper share at the latest quote.");
-  renderPaperPanels();
-}
-
-function closeOpenPaperPosition(reason) {
-  if (!state.paper.account?.openPosition) {
-    return;
-  }
-
-  const closed = closePaperPosition({
-    account: state.paper.account,
-    exitPrice: getCurrentPaperPrice(),
-    reason,
-    riskProfile: state.request?.riskProfile
+  const relatedAnalyses = settled.map((result, index) => {
+    const symbol = relatedSymbols[index];
+    if (result.status === "fulfilled") return result.value;
+    if (result.reason?.name === "AbortError") throw result.reason;
+    return {
+      symbol,
+      analysis: {
+        status: "FAILED"
+      },
+      message: result.reason?.message || "Related symbol unavailable"
+    };
   });
 
-  if (closed) {
-    state.paper.lastUpdatedAt = new Date().toISOString();
-    renderPaperPanels();
-  }
-}
-
-function resetPaperAccountWithConfirmation() {
-  if (!window.confirm("Reset the paper wallet and clear paper trade history?")) {
-    return;
-  }
-
-  state.paper.account = resetPaperAccount(Number(root.capital?.value || 10000));
-  state.paper.lastUpdatedAt = new Date().toISOString();
-  renderPaperPanels();
-}
-
-function renderPaperEntryMessage(message) {
-  console.debug("Paper entry:", message);
+  return buildRelatedConfirmation(primaryAnalysis, relatedAnalyses);
 }
 
 function buildDecision(marketSignal, campaign, capitalPlan, request) {
@@ -545,6 +500,7 @@ function buildRequest() {
     exchange: root.exchange.value,
     capital: Number(root.capital.value),
     riskProfile: root.riskProfile.value,
+    relatedSymbols: parseRelatedSymbols(root.relatedSymbols.value, root.symbol.value),
     maximumHoldingMinutes: HOLDING_OPTIONS[root.holdingPeriod.value],
     newsCount: 5,
     persist: true
@@ -558,9 +514,10 @@ function validateRequest(request) {
   if (!SUPPORTED_EXCHANGES.includes(request.exchange)) errors.exchange = "Unsupported exchange.";
   if (!Number.isFinite(request.capital) || request.capital < 1000 || request.capital > 1000000) errors.capital = "Capital must be 1000 to 1000000.";
   if (!SUPPORTED_RISKS.includes(request.riskProfile)) errors.riskProfile = "Unsupported risk profile.";
+  if (!Array.isArray(request.relatedSymbols) || request.relatedSymbols.length < 3) errors.relatedSymbols = "Enter at least 3 related symbols.";
   if (!Number.isFinite(request.maximumHoldingMinutes) || request.maximumHoldingMinutes <= 0) errors.holdingPeriod = "Invalid holding period.";
   if (!POLL_INTERVALS.includes(state.pollIntervalMs)) errors.pollInterval = "Invalid loop delay.";
-  ["symbol", "exchange", "capital", "riskProfile", "holdingPeriod", "pollInterval"].forEach((name) => {
+  ["symbol", "exchange", "capital", "riskProfile", "relatedSymbols", "holdingPeriod", "pollInterval"].forEach((name) => {
     const element = document.getElementById(`${name}Error`);
     if (element) element.textContent = errors[name] || "";
   });
@@ -590,6 +547,9 @@ function restoreSession() {
       root.exchange.value = savedRequest.exchange || "NSE";
       root.capital.value = savedRequest.capital || 10000;
       root.riskProfile.value = savedRequest.riskProfile || "CONTROLLED";
+      root.relatedSymbols.value = Array.isArray(savedRequest.relatedSymbols)
+        ? savedRequest.relatedSymbols.join(",")
+        : "ONGC,BPCL,IOC";
       root.pollInterval.value = String(savedRequest.pollIntervalMs ?? 0);
       updateCurrency();
     }
@@ -597,6 +557,7 @@ function restoreSession() {
       state.request = saved.request;
       state.market = saved.market;
       state.decision = saved.decision;
+      state.directionAnalysis = analyzeMarket(saved.market.candles);
       state.signal.current = saved.decision?.marketSignal || null;
       state.signal.previous = null;
       state.signal.changedAt = state.signal.current ? new Date().toISOString() : null;
@@ -614,16 +575,14 @@ function updateCurrency() {
   root.currencySymbol.textContent = ["NSE", "BSE"].includes(root.exchange.value) ? "₹" : "$";
 }
 
-function getCurrentPaperPrice() {
-  const price = Number(
-    state.lastEvidence?.quote?.price ??
-      state.market?.quote?.price ??
-      state.market?.quote?.regularMarketPrice ??
-      state.market?.quote?.currentPrice ??
-      state.market?.quote?.lastPrice
-  );
-
-  return Number.isFinite(price) ? price : null;
+function parseRelatedSymbols(value, mainSymbol) {
+  const main = String(mainSymbol || "").trim().toUpperCase();
+  return [...new Set(
+    String(value || "")
+      .split(/[\s,]+/)
+      .map((symbol) => symbol.trim().toUpperCase())
+      .filter((symbol) => symbol && symbol !== main && /^[A-Z0-9.\-_^=]+$/.test(symbol))
+  )].slice(0, 6);
 }
 
 function fetchElapsed() {

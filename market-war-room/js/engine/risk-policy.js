@@ -25,29 +25,6 @@ export const RISK_POLICIES = {
   }
 };
 
-export const PAPER_RISK_POLICIES = {
-  CONSERVATIVE: {
-    maximumRiskPercent: 0.5,
-    maximumAllocationPercent: 50,
-    estimatedChargesPercent: 0.15,
-    estimatedSlippagePercent: 0.10
-  },
-
-  CONTROLLED: {
-    maximumRiskPercent: 1.0,
-    maximumAllocationPercent: 70,
-    estimatedChargesPercent: 0.15,
-    estimatedSlippagePercent: 0.15
-  },
-
-  AGGRESSIVE: {
-    maximumRiskPercent: 1.5,
-    maximumAllocationPercent: 90,
-    estimatedChargesPercent: 0.15,
-    estimatedSlippagePercent: 0.20
-  }
-};
-
 export function buildCapitalPlan(request, campaign, entryArena) {
   const policy = RISK_POLICIES[request.riskProfile] || RISK_POLICIES.CONTROLLED;
   const capital = Number(request.capital);

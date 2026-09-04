@@ -189,7 +189,7 @@ h3 {
 
 #analysisForm {
   display: grid;
-  grid-template-columns: 1.12fr .7fr .78fr .9fr .92fr .72fr auto;
+  grid-template-columns: 1.12fr .7fr .78fr .9fr 1.1fr .92fr .72fr auto;
   gap: 14px;
   align-items: start;
   margin-top: 14px;
@@ -967,6 +967,239 @@ summary {
   box-shadow: var(--shadow);
 }
 
+.market-direction-card {
+  grid-column: 1 / -1;
+}
+
+.direction-card-head,
+.direction-overview,
+.direction-grid {
+  display: grid;
+  gap: 10px;
+}
+
+.direction-card-head {
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: start;
+}
+
+.direction-card-head h2 {
+  margin-bottom: 0;
+}
+
+.direction-score {
+  min-width: 130px;
+  border: 1px solid var(--border-hot);
+  border-radius: 8px;
+  background: #05070a;
+  padding: .55rem .7rem;
+}
+
+.direction-score span,
+.direction-indicator span {
+  display: block;
+  color: var(--text-muted);
+  font-size: .68rem;
+  font-weight: 800;
+  text-transform: uppercase;
+}
+
+.direction-score strong {
+  color: var(--text);
+  font-family: var(--mono);
+  font-size: 1.2rem;
+}
+
+.direction-overview {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  margin-top: 10px;
+}
+
+.direction-summary {
+  margin-top: 10px;
+  border: 1px solid var(--border);
+  border-left-width: 4px;
+  border-left-color: var(--accent);
+  border-radius: 8px;
+  background: rgba(13, 17, 23, .78);
+  padding: 10px 12px;
+}
+
+.direction-summary strong {
+  display: block;
+  margin-bottom: 4px;
+  font-family: var(--mono);
+  text-transform: uppercase;
+}
+
+.direction-summary p,
+.what-this-means p {
+  margin: 0;
+  color: var(--text);
+}
+
+.related-confirmation {
+  margin-top: 10px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: rgba(13, 17, 23, .78);
+  padding: 10px;
+}
+
+.related-confirmation[data-verdict="CONFIRMED"],
+.related-confirmation[data-verdict="PARTLY_CONFIRMED"] {
+  border-left: 4px solid var(--bull);
+}
+
+.related-confirmation[data-verdict="CONFLICTING"] {
+  border-left: 4px solid var(--bear);
+}
+
+.related-confirmation[data-verdict="MIXED"],
+.related-confirmation[data-verdict="MAIN_NEUTRAL"] {
+  border-left: 4px solid var(--balanced);
+}
+
+.related-confirmation__head {
+  display: flex;
+  justify-content: space-between;
+  gap: 1rem;
+  align-items: flex-start;
+}
+
+.related-confirmation__head h3 {
+  margin-bottom: 0;
+}
+
+.related-confirmation__head > strong {
+  color: var(--text);
+  font-family: var(--mono);
+  white-space: nowrap;
+}
+
+.related-confirmation p {
+  color: var(--text-muted);
+}
+
+.related-symbol-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 6px;
+}
+
+.related-symbol {
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  background: #05070a;
+  padding: 7px;
+}
+
+.related-symbol[data-direction="STRONG_BULLISH"],
+.related-symbol[data-direction="BULLISH"] {
+  border-top-color: var(--bull);
+}
+
+.related-symbol[data-direction="STRONG_BEARISH"],
+.related-symbol[data-direction="BEARISH"] {
+  border-top-color: var(--bear);
+}
+
+.related-symbol span,
+.related-symbol small {
+  display: block;
+  color: var(--text-muted);
+  font-size: .68rem;
+}
+
+.related-symbol strong {
+  display: block;
+  color: var(--text);
+  font-family: var(--mono);
+  font-size: .78rem;
+}
+
+.direction-grid {
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  margin-top: 10px;
+}
+
+.direction-indicator {
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: rgba(13, 17, 23, .78);
+  padding: 10px;
+}
+
+.direction-indicator h3 {
+  margin-bottom: 2px;
+}
+
+.direction-indicator strong {
+  display: block;
+  margin-bottom: 7px;
+  color: var(--text);
+  font-family: var(--mono);
+}
+
+.direction-indicator[data-signal="BULLISH"] {
+  border-top-color: var(--bull);
+}
+
+.direction-indicator[data-signal="BEARISH"] {
+  border-top-color: var(--bear);
+}
+
+.direction-indicator[data-signal="NEUTRAL"],
+.direction-indicator[data-signal="UNKNOWN"] {
+  border-top-color: var(--balanced);
+}
+
+.direction-indicator p {
+  margin: 7px 0 0;
+  color: var(--text-muted);
+  font-size: .78rem;
+}
+
+.what-this-means,
+.score-debug {
+  margin-top: 12px;
+  border-top: 1px solid var(--border);
+  padding-top: 10px;
+}
+
+.what-this-means .plain-list {
+  gap: 4px;
+  color: var(--text-muted);
+}
+
+.direction-warnings {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: 10px;
+}
+
+.direction-warnings span {
+  border: 1px solid var(--balanced);
+  border-radius: 999px;
+  padding: 2px 7px;
+  color: var(--balanced);
+  font-size: .68rem;
+}
+
+.score-debug-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 5px 16px;
+  margin-top: 8px;
+  max-width: 360px;
+  font-family: var(--mono);
+}
+
+.score-debug-grid strong {
+  text-align: right;
+}
+
 .safety-statement {
   color: var(--text-muted);
   font-size: .88rem;
@@ -1205,8 +1438,8 @@ p {
   padding: 8px;
 }
 
-#analysisForm {
-  grid-template-columns: 1fr .58fr .66fr .72fr .76fr .58fr auto;
+  #analysisForm {
+  grid-template-columns: 1fr .58fr .66fr .72fr .9fr .76fr .58fr auto;
   gap: 6px;
   margin-top: 6px;
 }
@@ -1249,6 +1482,7 @@ button {
 
 .facts-row,
 .arenas-panel,
+.market-direction-card,
 .plan-grid,
 .reason-grid,
 .timeline-panel,
@@ -1581,98 +1815,6 @@ summary {
   padding-top: .6rem;
 }
 
-.paper-safety-copy {
-  color: var(--text-muted);
-  font-size: .72rem;
-  margin: 0;
-}
-
-.paper-wallet-card,
-.paper-position-card,
-.paper-trade-history-card {
-  grid-column: 1 / -1;
-}
-
-.paper-panel__header {
-  display: flex;
-  justify-content: space-between;
-  gap: 1rem;
-  align-items: flex-start;
-  margin-bottom: 8px;
-}
-
-.paper-wallet-grid,
-.paper-position-grid {
-  display: grid;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
-  gap: 6px;
-}
-
-.paper-wallet-metric,
-.paper-position-metric {
-  border: 1px solid var(--border);
-  background: #070909;
-  padding: 6px;
-}
-
-.paper-wallet-metric span,
-.paper-position-metric span {
-  display: block;
-  color: var(--text-muted);
-  font-family: var(--mono);
-  font-size: .62rem;
-  text-transform: uppercase;
-}
-
-.paper-wallet-metric strong,
-.paper-position-metric strong {
-  display: block;
-  color: var(--text);
-  font-family: var(--mono);
-  margin-top: 2px;
-}
-
-.paper-wallet-metric--profit strong,
-.paper-position-metric--profit strong {
-  color: var(--bull);
-}
-
-.paper-wallet-metric--loss strong,
-.paper-position-metric--loss strong {
-  color: var(--bear);
-}
-
-.paper-safety-copy {
-  border-top: 1px solid var(--border);
-  margin-top: 8px;
-  padding-top: 7px;
-  text-transform: uppercase;
-}
-
-.paper-history-table-wrap {
-  overflow-x: auto;
-}
-
-.paper-history-table {
-  width: 100%;
-  border-collapse: collapse;
-  font-size: .68rem;
-}
-
-.paper-history-table th,
-.paper-history-table td {
-  border: 1px solid var(--border);
-  padding: 4px 5px;
-  text-align: left;
-  white-space: nowrap;
-}
-
-.paper-history-table th {
-  color: var(--accent);
-  font-weight: 800;
-  text-transform: uppercase;
-}
-
 .timeline-event {
   display: block;
   border: 1px solid var(--border);
@@ -1743,26 +1885,21 @@ summary {
   .plan-grid,
   .tactical-grid,
   .mission-grid,
+  .direction-grid,
+  .related-symbol-grid,
   .timeline-list {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 
   .facts-row,
   .arenas-panel,
+  .market-direction-card,
   .plan-grid,
   .reason-grid,
   .timeline-panel,
-  .paper-wallet-card,
-  .paper-position-card,
-  .paper-trade-history-card,
   #newsSection,
   #failedArenas {
     grid-column: 1 / -1;
-  }
-
-  .paper-wallet-grid,
-  .paper-position-grid {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 }
 
@@ -1774,6 +1911,9 @@ summary {
   .reason-grid,
   .mission-grid,
   .tactical-grid,
+  .direction-overview,
+  .direction-grid,
+  .related-symbol-grid,
   .timeline-list,
   .arena-key-grid,
   .battle-copy,
@@ -1789,17 +1929,8 @@ summary {
     grid-column: 1 / -1;
   }
 
-  .paper-wallet-grid,
-  .paper-position-grid {
+  .direction-card-head {
     grid-template-columns: 1fr;
-  }
-
-  .paper-panel__header {
-    display: block;
-  }
-
-  .paper-panel__header button {
-    margin-top: 6px;
   }
 
   .running-man-panel__header {

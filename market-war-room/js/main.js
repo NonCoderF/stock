@@ -1,6 +1,7 @@
 import { fetchAllArenas, fetchMarketArena } from "./api/market-api.js";
 import { analyzeMarket } from "./analysis/market-analyzer.js";
 import { applyRelatedConfirmation, buildRelatedConfirmation } from "./analysis/related-confirmation.js";
+import { rankStockCandidates } from "./analysis/stock-search.js";
 import { buildArenaEvidence } from "./engine/arena-evidence.js";
 import { chooseArenas } from "./engine/arena-selector.js";
 import { buildCampaign } from "./engine/campaign.js";
@@ -55,8 +56,11 @@ document.addEventListener("DOMContentLoaded", () => {
   bindEvents();
   restoreRunningManClientState();
   renderRunningManStatus(state.runningMan.lastPersistence);
-  restoreSession();
+  const restored = restoreSession();
   updateCurrency();
+  if (!restored) {
+    runInitialStockSearch();
+  }
 });
 
 function cacheElements() {
@@ -86,6 +90,19 @@ function bindEvents() {
   root["new-running-man-run"]?.addEventListener("click", () => {
     startRunningManSession();
     renderRunningManStatus(null);
+  });
+  document.addEventListener("click", (event) => {
+    const stockCard = event.target?.closest?.(".stock-search-item[data-symbol]");
+    if (stockCard) {
+      selectStockCandidate(stockCard.dataset.symbol, stockCard.dataset.symbols);
+    }
+  });
+  document.addEventListener("keydown", (event) => {
+    const stockCard = event.target?.closest?.(".stock-search-item[data-symbol]");
+    if (stockCard && (event.key === "Enter" || event.key === " ")) {
+      event.preventDefault();
+      selectStockCandidate(stockCard.dataset.symbol, stockCard.dataset.symbols);
+    }
   });
   root.symbol.addEventListener("input", () => {
     const start = root.symbol.selectionStart;
@@ -155,6 +172,7 @@ async function observe(request, options = {}) {
       request,
       entryArena,
       primaryAnalysis: state.directionAnalysis,
+      primaryCandles: market.candles,
       signal: controller.signal
     }));
     state.lastUpdatedAt = new Date();
@@ -241,7 +259,7 @@ function prepareRunningManForRequest() {
   }
 }
 
-async function analyzeRelatedStocks({ request, entryArena, primaryAnalysis, signal }) {
+async function analyzeRelatedStocks({ request, entryArena, primaryAnalysis, primaryCandles, signal }) {
   const relatedSymbols = request.relatedSymbols || [];
   const settled = await Promise.allSettled(
     relatedSymbols.map(async (symbol) => {
@@ -261,6 +279,8 @@ async function analyzeRelatedStocks({ request, entryArena, primaryAnalysis, sign
 
       return {
         symbol,
+        role: "RELATED",
+        candles: result.candles,
         analysis: analyzeMarket(result.candles, {
           includeCurrentCandle: true
         })
@@ -281,7 +301,17 @@ async function analyzeRelatedStocks({ request, entryArena, primaryAnalysis, sign
     };
   });
 
-  return buildRelatedConfirmation(primaryAnalysis, relatedAnalyses);
+  const confirmation = buildRelatedConfirmation(primaryAnalysis, relatedAnalyses);
+  confirmation.searchRanking = rankStockCandidates([
+    {
+      symbol: request.symbol,
+      role: "MAIN",
+      candles: primaryCandles,
+      analysis: primaryAnalysis
+    },
+    ...relatedAnalyses
+  ]);
+  return confirmation;
 }
 
 function buildDecision(marketSignal, campaign, capitalPlan, request) {
@@ -493,6 +523,34 @@ function stopObservation() {
   renderRunningManStatus(state.runningMan.lastPersistence);
 }
 
+function selectStockCandidate(symbol, candidateSymbolsText) {
+  const selected = String(symbol || "").trim().toUpperCase();
+  if (!selected) return;
+
+  const currentMain = root.symbol.value.trim().toUpperCase();
+  const rankedSymbols = String(candidateSymbolsText || "")
+    .split(",")
+    .map((item) => item.trim().toUpperCase())
+    .filter(Boolean);
+  const existingRelated = parseRelatedSymbols(root.relatedSymbols.value, selected);
+  const related = [...new Set([
+    ...rankedSymbols,
+    currentMain,
+    ...existingRelated
+  ].filter((item) => item && item !== selected))].slice(0, 6);
+
+  root.symbol.value = selected;
+  root.relatedSymbols.value = related.join(",");
+  root.analysisForm.requestSubmit();
+}
+
+function runInitialStockSearch() {
+  const request = buildRequest();
+  if (!validateRequest(request)) return;
+  state.live = false;
+  observe(request, { background: false });
+}
+
 function buildRequest() {
   state.pollIntervalMs = Number(root.pollInterval.value);
   return {
@@ -564,11 +622,13 @@ function restoreSession() {
       state.marketStatus = "RESTORED";
       renderMarketStage({ request: saved.request, market: saved.market, decision: saved.decision, marketMs: null, totalMs: null });
       renderPostStage(null);
+      return true;
     }
   } catch {
     sessionStorage.removeItem(STORAGE_REQUEST);
     sessionStorage.removeItem(STORAGE_RESPONSE);
   }
+  return false;
 }
 
 function updateCurrency() {

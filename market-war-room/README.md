@@ -149,6 +149,34 @@ For each related symbol, the frontend fetches the same entry timeframe used for 
 
 This keeps the analysis from depending on only one stock while still making the main symbol's own candles the primary evidence.
 
+## Stock Search Ranking
+
+The related-stock set is also ranked before display, similar to a small deterministic search result list. It does not use Google or broker margin/leverage data. In this app, `Intraday Margin` means the current session movement range as a percentage of price. It ranks the main symbol plus related symbols by:
+
+- intraday margin
+- medium ATR volatility
+- volume confirmation
+- signal confidence
+- valid candle history
+
+The ranking weights and volatility thresholds are centralized in:
+
+```text
+js/analysis/stock-search.js
+```
+
+Default weights:
+
+```text
+Intraday margin      45
+Medium volatility    25
+Volume confirmation  15
+Signal confidence    10
+Valid data            5
+```
+
+This favors stocks that are active enough for intraday movement while avoiding names that are too flat or excessively volatile.
+
 ## Running Man Persistence
 
 Running Man stores a timestamped sequence of local observations so the system can later replay how market evidence evolved.

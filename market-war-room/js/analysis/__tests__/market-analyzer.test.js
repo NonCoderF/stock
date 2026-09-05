@@ -11,6 +11,7 @@ import { buildMarketStructure } from "../indicators/market-structure.js";
 import { calculateDirectionScore, mapDirection } from "../scoring/direction-score.js";
 import { analyzeMarket } from "../market-analyzer.js";
 import { applyRelatedConfirmation, buildRelatedConfirmation } from "../related-confirmation.js";
+import { intradayMarginScore, mediumVolatilityScore, rankStockCandidates } from "../stock-search.js";
 import { bearishCandles, bullishCandles, sidewaysCandles } from "./sample-candles.js";
 
 test("EMA calculates the latest exponential moving average", () => {
@@ -136,4 +137,47 @@ test("conflicting related stocks reduce main confidence", () => {
 
   assert.equal(primary.confidence, "LOW");
   assert.match(primary.summary, /confidence is reduced/);
+});
+
+test("stock search rewards medium volatility more than very low volatility", () => {
+  assert.ok(mediumVolatilityScore(1.2) > mediumVolatilityScore(0.1));
+});
+
+test("stock search rewards higher intraday margin", () => {
+  assert.ok(intradayMarginScore(1.5) > intradayMarginScore(0.3));
+});
+
+test("stock search ranks candidates by intraday margin and volatility score", () => {
+  const ranked = rankStockCandidates([
+    {
+      symbol: "LOW",
+      candles: sidewaysCandles(),
+      analysis: {
+        status: "READY",
+        atr: { percent: 0.1 },
+        currentClose: 100,
+        indicators: [{ name: "Volume", score: 0 }],
+        direction: "NEUTRAL",
+        confidence: "LOW",
+        candleCount: 100,
+        preferredCandleCount: 100
+      }
+    },
+    {
+      symbol: "MID",
+      candles: bullishCandles(),
+      analysis: {
+        status: "READY",
+        atr: { percent: 1.2 },
+        currentClose: 120,
+        indicators: [{ name: "Volume", score: 1 }],
+        direction: "BULLISH",
+        confidence: "MEDIUM",
+        candleCount: 100,
+        preferredCandleCount: 100
+      }
+    }
+  ]);
+
+  assert.equal(ranked[0].symbol, "MID");
 });

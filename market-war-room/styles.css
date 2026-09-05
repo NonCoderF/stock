@@ -1087,6 +1087,77 @@ summary {
   gap: 6px;
 }
 
+.stock-search {
+  border-bottom: 1px solid var(--border);
+  margin-bottom: 10px;
+  padding-bottom: 10px;
+}
+
+.stock-search-grid {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: 6px;
+}
+
+.stock-search-item {
+  position: relative;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  background: #05070a;
+  color: var(--text);
+  padding: 7px;
+  text-align: left;
+  text-transform: none;
+}
+
+.stock-search-item:hover {
+  border-color: var(--accent);
+}
+
+.stock-search-item:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+.stock-search-item[data-direction="STRONG_BULLISH"],
+.stock-search-item[data-direction="BULLISH"] {
+  border-top-color: var(--bull);
+}
+
+.stock-search-item[data-direction="STRONG_BEARISH"],
+.stock-search-item[data-direction="BEARISH"] {
+  border-top-color: var(--bear);
+}
+
+.stock-search-item span,
+.stock-search-item em,
+.stock-search-item small {
+  display: block;
+  color: var(--text-muted);
+  font-size: .68rem;
+}
+
+.stock-search-item em {
+  color: var(--accent);
+  font-style: normal;
+  font-weight: 800;
+}
+
+.stock-search-item strong {
+  display: block;
+  color: var(--text);
+  font-family: var(--mono);
+  font-size: 1rem;
+}
+
+.stock-select-button {
+  min-height: 24px;
+  margin-top: 7px;
+  border-radius: 4px;
+  padding: 2px 8px;
+  font-size: .62rem;
+}
+
 .related-symbol {
   border: 1px solid var(--border);
   border-radius: 6px;
@@ -1886,6 +1957,7 @@ summary {
   .tactical-grid,
   .mission-grid,
   .direction-grid,
+  .stock-search-grid,
   .related-symbol-grid,
   .timeline-list {
     grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -1913,6 +1985,7 @@ summary {
   .tactical-grid,
   .direction-overview,
   .direction-grid,
+  .stock-search-grid,
   .related-symbol-grid,
   .timeline-list,
   .arena-key-grid,

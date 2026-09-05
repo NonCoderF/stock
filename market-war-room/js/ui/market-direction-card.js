@@ -38,12 +38,12 @@ export function renderMarketDirectionCard(root, analysis) {
       ${metric("Candle Mode", analysis.includesCurrentCandle ? "Latest included" : "Closed candles only")}
     </div>
 
+    ${renderRelatedConfirmation(analysis.relatedConfirmation)}
+
     <div class="direction-summary">
       <strong>Simple Read</strong>
       <p>${escape(analysis.summary)}</p>
     </div>
-
-    ${renderRelatedConfirmation(analysis.relatedConfirmation)}
 
     <div class="direction-grid">
       ${rows.map(renderIndicator).join("")}
@@ -116,6 +116,7 @@ function renderRelatedConfirmation(confirmation) {
 
   return `
     <section class="related-confirmation" data-verdict="${escape(confirmation.verdict)}">
+      ${renderStockSearch(confirmation.searchRanking)}
       <div class="related-confirmation__head">
         <div>
           <p class="section-label">RELATED STOCKS</p>
@@ -137,6 +138,35 @@ function renderRelatedConfirmation(confirmation) {
   `;
 }
 
+function renderStockSearch(ranking) {
+  const rows = (Array.isArray(ranking) ? ranking : []).slice(0, 5);
+  if (!rows.length) return "";
+  const symbols = rows.map((item) => item.symbol).filter(Boolean).join(",");
+
+  return `
+    <div class="stock-search">
+      <div class="related-confirmation__head">
+        <div>
+          <p class="section-label">STOCK SEARCH</p>
+          <h3>Highest intraday margin</h3>
+        </div>
+        <strong>Top ${rows.length}</strong>
+      </div>
+      <div class="stock-search-grid">
+        ${rows.map((item) => `
+          <article class="stock-search-item" role="button" tabindex="0" data-symbol="${escape(item.symbol)}" data-symbols="${escape(symbols)}" data-direction="${escape(item.direction || "UNKNOWN")}">
+            <span>#${escape(item.rank)} ${escape(item.symbol)}${item.role === "MAIN" ? " MAIN" : ""}</span>
+            <strong>${escape(String(item.searchScore))}</strong>
+            <em>Margin ${escape(formatPercent(item.intradayMarginPercent))}</em>
+            <small>${escape(item.reason)}</small>
+            <button class="stock-select-button" type="button" tabindex="-1">Use</button>
+          </article>
+        `).join("")}
+      </div>
+    </div>
+  `;
+}
+
 function relatedTitle(verdict) {
   if (verdict === "CONFIRMED") return "Direction confirmed by related stocks";
   if (verdict === "PARTLY_CONFIRMED") return "Direction partly confirmed";
@@ -153,6 +183,12 @@ function formatSigned(value) {
   const number = Number(value);
   if (!Number.isFinite(number)) return "0";
   return number > 0 ? `+${number}` : String(number);
+}
+
+function formatPercent(value) {
+  const number = Number(value);
+  if (!Number.isFinite(number)) return "—";
+  return `${number.toFixed(2)}%`;
 }
 
 function title(value) {
